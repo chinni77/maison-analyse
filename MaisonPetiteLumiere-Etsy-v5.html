@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Maison Analyse">
+<title>MaisonPetiteLumiere · Etsy Analyse v5</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{
+  --orange:#F1641E;--orange-light:#FDE8DC;
+  --bg:#FAF8F5;--card:#FFFFFF;--text:#1A1714;--muted:#8A8178;
+  --border:rgba(26,23,20,0.1);
+  --success:#3B6D11;--success-bg:#EAF3DE;
+  --warn:#854F0B;--warn-bg:#FAEEDA;
+  --danger:#A32D2D;--danger-bg:#FCEBEB;
+  --info:#185FA5;--info-bg:#E6F1FB;
+  --purple:#534AB7;--purple-bg:#EEEDFE;
+  --teal:#0F6E56;--teal-bg:#E1F5EE;
+  --radius:14px;--radius-sm:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:60px}
+.app-header{background:var(--card);border-bottom:1px solid var(--border);padding:13px 14px}
+.header-row{display:flex;align-items:center;gap:11px}
+.header-logo{width:37px;height:37px;background:var(--orange);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.header-logo svg{width:20px;height:20px;fill:none;stroke:white;stroke-width:2}
+.header-title{font-family:'Playfair Display',serif;font-size:17px;font-weight:500}
+.header-sub{font-size:11px;color:var(--muted);margin-top:1px}
+.nav{display:flex;background:var(--card);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;overflow-x:auto}
+.nav::-webkit-scrollbar{display:none}
+.nav-tab{flex:1;min-width:56px;padding:11px 3px 9px;text-align:center;font-size:9px;font-weight:500;color:var(--muted);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+.nav-tab.active{color:var(--orange);border-bottom-color:var(--orange)}
+.nav-tab i{display:block;font-size:15px;margin-bottom:2px}
+.page{display:none}.page.active{display:block}
+.section{padding:14px 13px 0}
+.section-title{font-family:'Playfair Display',serif;font-size:15px;font-weight:400;margin-bottom:10px}
+.card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;margin-bottom:11px}
+.card-header{padding:12px 13px 0;font-size:13px;font-weight:500}
+.card-body{padding:10px 13px 13px}
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:11px}
+.metric{background:var(--card);border-radius:var(--radius);padding:12px 13px;border:1px solid var(--border)}
+.metric-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.metric-value{font-family:'Playfair Display',serif;font-size:22px;font-weight:400;line-height:1}
+.metric-sub{font-size:11px;margin-top:3px;color:var(--muted)}
+
+/* IMPORT BANNER */
+.import-banner{margin:13px 13px 0;background:var(--info-bg);border:1px solid rgba(24,95,165,.2);border-radius:var(--radius);padding:13px 14px}
+.import-banner-title{font-size:13px;font-weight:500;color:var(--info);margin-bottom:8px;display:flex;align-items:center;gap:7px}
+.import-steps{font-size:12px;color:var(--info);line-height:1.9;opacity:.85}
+.import-btn-main{margin:10px 13px 0;width:calc(100% - 26px);padding:13px;background:var(--orange);color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+
+/* MODAL */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:none;align-items:flex-end}
+.modal-backdrop.open{display:flex}
+.modal{background:var(--card);border-radius:20px 20px 0 0;padding:20px 16px 32px;width:100%;max-height:90vh;overflow-y:auto}
+.modal-title{font-family:'Playfair Display',serif;font-size:17px;font-weight:400;margin-bottom:4px}
+.modal-sub{font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5}
+.field-label{font-size:11px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}
+.field-input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;background:var(--bg);color:var(--text);margin-bottom:3px}
+.field-input:focus{outline:none;border-color:rgba(83,74,183,.4)}
+.field-textarea{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;background:var(--bg);color:var(--text);resize:none;margin-bottom:3px}
+.field-textarea:focus{outline:none;border-color:rgba(83,74,183,.4)}
+.char-hint{font-size:10px;color:var(--muted);text-align:right;margin-bottom:10px}
+.char-hint.over{color:var(--danger)}
+.modal-save{width:100%;padding:13px;background:var(--orange);color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:6px}
+.modal-cancel{width:100%;padding:11px;background:none;color:var(--muted);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:8px}
+
+/* LISTING LIST */
+.listing-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer}
+.listing-item:last-child{border-bottom:none}
+.listing-item:active{opacity:.7}
+.listing-num{width:24px;height:24px;border-radius:50%;background:var(--orange-light);color:var(--orange);font-size:11px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.listing-info{flex:1;min-width:0}
+.listing-title{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
+.listing-meta{font-size:11px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap}
+.listing-score{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;font-weight:500;font-size:11px;flex-shrink:0;margin-top:1px}
+.listing-score.high{background:var(--success-bg);color:var(--success)}
+.listing-score.mid{background:var(--warn-bg);color:var(--warn)}
+.listing-score.low{background:var(--danger-bg);color:var(--danger)}
+.add-listing-btn{width:100%;padding:12px;background:none;border:1.5px dashed var(--border);border-radius:var(--radius);font-size:13px;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:7px;margin-bottom:11px}
+.add-listing-btn:active{opacity:.7}
+
+/* EMPTY STATE */
+.empty{text-align:center;padding:2.5rem 1rem}
+.empty-icon{font-size:36px;margin-bottom:10px}
+.empty p{font-size:13px;color:var(--muted);line-height:1.6}
+
+/* BAR */
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.bar-row:last-child{margin-bottom:0}
+.bar-label{font-size:11px;color:var(--muted);width:100px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{flex:1;height:5px;background:var(--bg);border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;background:var(--orange)}
+.bar-val{font-size:11px;color:var(--muted);width:36px;text-align:right;flex-shrink:0}
+
+/* TAGS */
+.tag-cloud{display:flex;flex-wrap:wrap;gap:6px}
+.tag-pill{padding:5px 10px;border-radius:20px;font-size:12px}
+.kw-row{padding:8px 0;border-bottom:1px solid var(--border)}
+.kw-row:last-child{border-bottom:none}
+.kw-title{font-size:12px;font-weight:500;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kw-pills{display:flex;flex-wrap:wrap;gap:3px}
+.kw-pill{padding:2px 7px;border-radius:20px;font-size:10px}
+.kw-pill.match{background:var(--success-bg);color:var(--success)}
+.kw-pill.miss{background:var(--danger-bg);color:var(--danger)}
+
+/* SEASONAL */
+.season-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.season-tab{padding:6px 11px;border-radius:20px;font-size:12px;border:1px solid var(--border);background:var(--card);color:var(--muted);cursor:pointer}
+.season-tab.active{background:var(--orange);color:#fff;border-color:var(--orange)}
+.season-tag-grid{display:flex;flex-wrap:wrap;gap:6px}
+.season-tag{padding:5px 11px;border-radius:20px;font-size:11px;cursor:pointer}
+.season-tag:active{opacity:.7}
+.season-urgency{font-size:11px;padding:8px 11px;border-radius:var(--radius-sm);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.season-urgency.hot{background:var(--danger-bg);color:var(--danger)}
+.season-urgency.warm{background:var(--warn-bg);color:var(--warn)}
+.season-urgency.cool{background:var(--info-bg);color:var(--info)}
+
+/* AI */
+.ai-banner{background:var(--purple-bg);border:1px solid rgba(83,74,183,.2);border-radius:var(--radius);padding:13px 14px;margin-bottom:12px;display:flex;gap:10px}
+.ai-banner-icon{font-size:20px;flex-shrink:0}
+.ai-banner-text{font-size:12px;color:var(--purple);line-height:1.5}
+.ai-banner-text strong{display:block;font-weight:500;margin-bottom:2px;font-size:13px}
+.listing-picker{width:100%;padding:10px 32px 10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;background:var(--card);color:var(--text);margin-bottom:10px;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238A8178' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+.ai-btn{width:100%;padding:13px;background:var(--purple);color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:4px}
+.ai-btn:disabled{opacity:.55}
+.ai-result{display:none}.ai-result.visible{display:block}
+.ai-divider{height:1px;background:var(--border);margin:15px 0}
+.ai-label{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:500;margin-bottom:6px;margin-top:13px}
+.ai-label:first-of-type{margin-top:0}
+.ai-title-box{background:var(--purple-bg);border:1px solid rgba(83,74,183,.15);border-radius:var(--radius-sm);padding:12px 42px 12px 13px;font-size:13px;color:var(--purple);line-height:1.6;margin-bottom:3px;position:relative;word-break:break-word}
+.copy-btn{position:absolute;top:9px;right:9px;background:none;border:none;font-size:16px;cursor:pointer;opacity:.5}
+.ai-tags-grid{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:4px}
+.ai-tag{padding:6px 10px;border-radius:20px;font-size:11px;background:var(--purple-bg);color:var(--purple);border:1px solid rgba(83,74,183,.2);cursor:pointer;display:flex;align-items:center;gap:4px}
+.tag-char{font-size:9px;opacity:.5}
+.ai-tip{font-size:12px;line-height:1.6;padding:10px 12px;background:var(--bg);border-radius:var(--radius-sm);border-left:3px solid var(--purple)}
+.checklist-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.check-item{background:var(--bg);border-radius:var(--radius-sm);padding:8px 10px;font-size:11px}
+.check-label{color:var(--muted);margin-bottom:2px}
+.check-val{font-weight:500}
+
+/* COMPETITOR */
+.comp-input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;background:var(--bg);color:var(--text);margin-bottom:10px}
+.comp-input:focus{outline:none;border-color:rgba(83,74,183,.4)}
+.comp-btn{width:100%;padding:12px;background:var(--teal);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px}
+.comp-btn:disabled{opacity:.55}
+.comp-row{padding:9px 0;border-bottom:1px solid var(--border)}
+.comp-row:last-child{border-bottom:none}
+.comp-title-text{font-size:12px;font-weight:500;margin-bottom:3px}
+.comp-meta{font-size:11px;color:var(--muted)}
+.comp-badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:20px;margin-right:5px}
+.comp-badge.top{background:var(--success-bg);color:var(--success)}
+.comp-badge.mid{background:var(--warn-bg);color:var(--warn)}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
+.spinner-p{width:16px;height:16px;border:2px solid rgba(83,74,183,.2);border-top-color:var(--purple);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
+.spinner-t{width:16px;height:16px;border:2px solid rgba(15,110,86,.2);border-top-color:var(--teal);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
+@keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeUp .3s ease forwards}
+.toast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:#1A1714;color:#fff;padding:8px 18px;border-radius:20px;font-size:12px;z-index:9999;pointer-events:none;opacity:0;transition:opacity .2s}
+.toast.show{opacity:1}
+.footer{text-align:center;font-size:11px;color:var(--muted);padding:20px 13px 0}
+</style>
+</head>
+<body>
+<div class="toast" id="toast">Kopiert ✓</div>
+
+<!-- ADD LISTING MODAL -->
+<div class="modal-backdrop" id="modalBackdrop" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-title">Listing hinzufügen</div>
+    <div class="modal-sub">Kopiere Titel und Tags aus deinem Etsy Shop Manager und füge sie hier ein.</div>
+    <div style="margin-bottom:10px">
+      <div class="field-label">Listing-Titel</div>
+      <textarea class="field-textarea" id="modalTitle" rows="3" placeholder="Titel hier einfügen..." oninput="updateModalCount()" maxlength="160"></textarea>
+      <div class="char-hint" id="modalTitleCount">0 / 140</div>
+    </div>
+    <div style="margin-bottom:10px">
+      <div class="field-label">Tags (kommagetrennt einfügen)</div>
+      <textarea class="field-textarea" id="modalTags" rows="3" placeholder="tag one, tag two, tag three..."></textarea>
+      <div style="font-size:10px;color:var(--muted);margin-top:3px">Alle 13 Tags mit Komma getrennt einfügen</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div>
+        <div class="field-label">Views</div>
+        <input class="field-input" type="number" id="modalViews" placeholder="z.B. 1240" min="0">
+      </div>
+      <div>
+        <div class="field-label">Favorites</div>
+        <input class="field-input" type="number" id="modalFavs" placeholder="z.B. 48" min="0">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div>
+        <div class="field-label">Preis ($)</div>
+        <input class="field-input" type="number" id="modalPrice" placeholder="z.B. 34.90" min="0" step="0.01">
+      </div>
+      <div>
+        <div class="field-label">Verkäufe</div>
+        <input class="field-input" type="number" id="modalSales" placeholder="z.B. 12" min="0">
+      </div>
+    </div>
+    <button class="modal-save" onclick="saveListing()">✅ Listing speichern</button>
+    <button class="modal-cancel" onclick="closeModalBtn()">Abbrechen</button>
+  </div>
+</div>
+
+<header class="app-header">
+  <div class="header-row">
+    <div class="header-logo">
+      <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12l2 2 4-4"/></svg>
+    </div>
+    <div>
+      <div class="header-title">MaisonPetiteLumiere</div>
+      <div class="header-sub">Etsy Analyse · USA 🇺🇸 · Kein API nötig</div>
+    </div>
+  </div>
+</header>
+
+<nav class="nav">
+  <button class="nav-tab active" onclick="showPage('overview',this)"><i>📊</i>Übersicht</button>
+  <button class="nav-tab" onclick="showPage('seo',this)"><i>🔍</i>SEO</button>
+  <button class="nav-tab" onclick="showPage('tags',this)"><i>🏷️</i>Tags</button>
+  <button class="nav-tab" onclick="showPage('seasonal',this)"><i>🎄</i>Saison</button>
+  <button class="nav-tab" onclick="showPage('competitor',this)"><i>🔎</i>Konkurrenz</button>
+  <button class="nav-tab" onclick="showPage('ai',this)"><i>✨</i>KI</button>
+</nav>
+
+<div class="import-banner">
+  <div class="import-banner-title">📋 So startest du</div>
+  <div class="import-steps">
+    1. Etsy Shop Manager öffnen<br>
+    2. Listing auswählen → Titel & Tags kopieren<br>
+    3. Unten auf "Listing hinzufügen" tippen<br>
+    4. Daten einfügen → Speichern
+  </div>
+</div>
+<button class="import-btn-main" onclick="openModal()">➕ Listing hinzufügen</button>
+
+<!-- ═══ OVERVIEW ═══ -->
+<div class="page active" id="page-overview">
+  <div class="section">
+    <div class="section-title">Übersicht</div>
+    <div id="overviewEmpty" class="empty">
+      <div class="empty-icon">📦</div>
+      <p>Noch keine Listings.<br>Tippe oben auf "Listing hinzufügen".</p>
+    </div>
+    <div id="overviewContent" style="display:none">
+      <div class="metrics" id="overviewMetrics"></div>
+      <div class="section-title">Top Listings nach Views</div>
+      <div class="card"><div class="card-body" id="topBars"></div></div>
+      <div class="section-title">Alle Listings</div>
+      <div class="card"><div class="card-body" id="listingList"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SEO ═══ -->
+<div class="page" id="page-seo">
+  <div class="section">
+    <div class="section-title">SEO Score</div>
+    <div id="seoEmpty" class="empty"><div class="empty-icon">🔍</div><p>Noch keine Listings hinzugefügt.</p></div>
+    <div id="seoContent" style="display:none">
+      <div class="card"><div class="card-body" id="seoList"></div></div>
+      <div class="card"><div class="card-header">Score-Erklärung</div><div class="card-body" style="font-size:12px;color:var(--muted);line-height:1.7"><span style="color:var(--success)">■</span> 80–100 gut &nbsp;·&nbsp;<span style="color:var(--warn)">■</span> 50–79 verbesserbar &nbsp;·&nbsp;<span style="color:var(--danger)">■</span> 0–49 dringend optimieren<br><br>Bewertet: Titel-Länge, Tag-Anzahl (max 13), Keyword-Match Titel↔Tags, Fav-Rate.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TAGS ═══ -->
+<div class="page" id="page-tags">
+  <div class="section">
+    <div class="section-title">Tag-Analyse</div>
+    <div id="tagsEmpty" class="empty"><div class="empty-icon">🏷️</div><p>Noch keine Listings hinzugefügt.</p></div>
+    <div id="tagsContent" style="display:none">
+      <div class="card"><div class="card-header">Tag-Wolke</div><div class="card-body" id="tagCloud"></div></div>
+      <div class="card"><div class="card-header">Keyword-Abgleich Titel ↔ Tags</div><div class="card-body" id="kwMatch"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SEASONAL ═══ -->
+<div class="page" id="page-seasonal">
+  <div class="section">
+    <div class="section-title">Saisonale Tags 🇺🇸</div>
+    <div class="season-tabs" id="seasonTabs"></div>
+    <div id="seasonUrgency" class="season-urgency warm"></div>
+    <div class="card">
+      <div class="card-header" id="seasonCardTitle"></div>
+      <div class="card-body">
+        <p style="font-size:11px;color:var(--muted);margin-bottom:10px">Tippe zum Kopieren</p>
+        <div class="season-tag-grid" id="seasonTagsEl"></div>
+      </div>
+    </div>
+    <div class="card"><div class="card-header">💡 Strategie-Tipp</div><div class="card-body" id="seasonTip" style="font-size:12px;line-height:1.7"></div></div>
+    <div class="card"><div class="card-header">📅 Alle Saisons</div><div class="card-body" id="seasonCalendar" style="font-size:12px;line-height:2.2"></div></div>
+  </div>
+</div>
+
+<!-- ═══ COMPETITOR ═══ -->
+<div class="page" id="page-competitor">
+  <div class="section">
+    <div class="section-title">Konkurrenz-Analyse</div>
+    <div class="card">
+      <div class="card-body">
+        <p style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.6">Claude analysiert typische Top-Listings für dein Keyword und zeigt dir Lücken und Chancen.</p>
+        <input class="comp-input" id="compKeyword" placeholder="z.B. french home decor, handmade candle..." type="text">
+        <button class="comp-btn" id="compBtn" onclick="runCompetitor()"><span>🔎</span> Analysieren</button>
+      </div>
+    </div>
+    <div id="compResult"></div>
+  </div>
+</div>
+
+<!-- ═══ AI ═══ -->
+<div class="page" id="page-ai">
+  <div class="section">
+    <div class="ai-banner">
+      <div class="ai-banner-icon">✨</div>
+      <div class="ai-banner-text">
+        <strong>KI-Optimierung · US-Markt</strong>
+        Professionelle Etsy SEO-Methodik: Anchor-Keywords, 5 W's, Zero-Overlap, 140-Zeichen-Titel.
+      </div>
+    </div>
+    <div id="aiEmpty" class="empty"><div class="empty-icon">✨</div><p>Füge zuerst ein Listing hinzu um es zu optimieren.</p></div>
+    <div id="aiPanel" style="display:none">
+      <select class="listing-picker" id="listingPicker"><option value="">— Listing auswählen —</option></select>
+      <button class="ai-btn" id="aiBtn" onclick="runAiOptimize()"><span>✨</span> Jetzt optimieren</button>
+      <p style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:4px">ca. 10–15 Sekunden</p>
+      <div class="ai-result" id="aiResult">
+        <div class="ai-divider"></div>
+        <div class="ai-label">✅ Optimierter Titel</div>
+        <div class="ai-title-box"><button class="copy-btn" onclick="doCopy(document.getElementById('aiTitleText').textContent)">📋</button><span id="aiTitleText"></span></div>
+        <div class="char-hint" id="aiTitleChars"></div>
+        <div class="ai-label">🏷️ 13 Tags — tippe zum Kopieren</div>
+        <div class="ai-tags-grid" id="aiTagsGrid"></div>
+        <div id="aiTagCats" style="font-size:11px;color:var(--muted);line-height:2;margin-top:8px"></div>
+        <div class="ai-label">💡 Erklärung</div>
+        <div class="ai-tip" id="aiTip"></div>
+        <div class="ai-label">📋 Checkliste</div>
+        <div class="checklist-grid" id="aiChecklist"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px">
+          <button style="padding:11px;background:var(--purple);color:#fff;border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer" onclick="doCopy(document.getElementById('aiTitleText').textContent)">📋 Titel kopieren</button>
+          <button style="padding:11px;background:var(--teal);color:#fff;border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer" onclick="copyAllAiTags()">🏷️ Tags kopieren</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">MaisonPetiteLumiere · v5 · Kein API nötig 🚀</div>
+
+<script>
+// ══ STATE ══
+let listings = JSON.parse(localStorage.getItem('mpl_listings')||'[]');
+let editingIdx = -1;
+let lastAiTags = [];
+
+function save(){localStorage.setItem('mpl_listings',JSON.stringify(listings));}
+
+// ══ NAV ══
+function showPage(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ══ MODAL ══
+function openModal(idx){
+  editingIdx = idx !== undefined ? idx : -1;
+  const modal = document.getElementById('modalBackdrop');
+  if(editingIdx >= 0){
+    const l = listings[editingIdx];
+    document.getElementById('modalTitle').value = l.title||'';
+    document.getElementById('modalTags').value = (l.tags||[]).join(', ');
+    document.getElementById('modalViews').value = l.views||'';
+    document.getElementById('modalFavs').value = l.favs||'';
+    document.getElementById('modalPrice').value = l.price||'';
+    document.getElementById('modalSales').value = l.sales||'';
+  } else {
+    document.getElementById('modalTitle').value='';
+    document.getElementById('modalTags').value='';
+    document.getElementById('modalViews').value='';
+    document.getElementById('modalFavs').value='';
+    document.getElementById('modalPrice').value='';
+    document.getElementById('modalSales').value='';
+  }
+  updateModalCount();
+  modal.classList.add('open');
+}
+function closeModal(e){if(e.target===document.getElementById('modalBackdrop'))closeModalBtn();}
+function closeModalBtn(){document.getElementById('modalBackdrop').classList.remove('open');}
+function updateModalCount(){
+  const len=document.getElementById('modalTitle').value.length;
+  const el=document.getElementById('modalTitleCount');
+  el.textContent=`${len} / 140`;
+  el.className='char-hint'+(len>140?' over':'');
+}
+function saveListing(){
+  const title=document.getElementById('modalTitle').value.trim();
+  if(!title){alert('Bitte einen Titel eingeben.');return;}
+  const tagsRaw=document.getElementById('modalTags').value;
+  const tags=tagsRaw.split(',').map(t=>t.trim().toLowerCase()).filter(t=>t.length>0).slice(0,13);
+  const listing={
+    title,tags,
+    views:parseInt(document.getElementById('modalViews').value)||0,
+    favs:parseInt(document.getElementById('modalFavs').value)||0,
+    price:parseFloat(document.getElementById('modalPrice').value)||0,
+    sales:parseInt(document.getElementById('modalSales').value)||0,
+    added:Date.now()
+  };
+  if(editingIdx>=0) listings[editingIdx]=listing;
+  else listings.push(listing);
+  save();
+  closeModalBtn();
+  renderAll();
+  showToast(editingIdx>=0?'Listing aktualisiert ✓':'Listing gespeichert ✓');
+}
+function deleteListing(idx){
+  if(!confirm('Listing löschen?'))return;
+  listings.splice(idx,1);
+  save();
+  renderAll();
+  showToast('Gelöscht');
+}
+
+// ══ HELPERS ══
+const getTags=l=>Array.isArray(l.tags)?l.tags:[];
+function seoScore(l){
+  let s=0;const len=(l.title||'').length,tgs=getTags(l);
+  if(len>=100)s+=25;else if(len>=50)s+=12;else if(len>=30)s+=6;
+  if(tgs.length===13)s+=30;else if(tgs.length>=8)s+=18;else if(tgs.length>=4)s+=8;
+  const tw=(l.title||'').toLowerCase().split(/\s+/).filter(w=>w.length>3);
+  const mc=tgs.filter(t=>tw.some(w=>t.toLowerCase().includes(w))).length;
+  s+=Math.min(mc*5,25);
+  const fr=l.views?(l.favs/l.views):0;
+  if(fr>0.05)s+=20;else if(fr>0.02)s+=10;else if(fr>0)s+=5;
+  return Math.min(s,100);
+}
+const scoreClass=s=>s>=80?'high':s>=50?'mid':'low';
+
+// ══ RENDER ALL ══
+function renderAll(){
+  renderOverview();
+  renderSeo();
+  renderTags();
+  renderAiPicker();
+}
+
+// ══ OVERVIEW ══
+function renderOverview(){
+  const hasData=listings.length>0;
+  document.getElementById('overviewEmpty').style.display=hasData?'none':'block';
+  document.getElementById('overviewContent').style.display=hasData?'block':'none';
+  if(!hasData)return;
+  const totalViews=listings.reduce((s,l)=>s+(l.views||0),0);
+  const totalSales=listings.reduce((s,l)=>s+(l.sales||0),0);
+  const totalFavs=listings.reduce((s,l)=>s+(l.favs||0),0);
+  const totalRev=listings.reduce((s,l)=>s+(l.sales||0)*(l.price||0),0);
+  const avgScore=Math.round(listings.reduce((s,l)=>s+seoScore(l),0)/listings.length);
+  document.getElementById('overviewMetrics').innerHTML=`
+    <div class="metric"><div class="metric-label">Est. Umsatz</div><div class="metric-value">$${Math.round(totalRev).toLocaleString()}</div><div class="metric-sub">${listings.length} Listings</div></div>
+    <div class="metric"><div class="metric-label">Verkäufe</div><div class="metric-value">${totalSales.toLocaleString()}</div><div class="metric-sub">gesamt</div></div>
+    <div class="metric"><div class="metric-label">Views</div><div class="metric-value">${totalViews.toLocaleString()}</div><div class="metric-sub">gesamt</div></div>
+    <div class="metric"><div class="metric-label">Ø SEO Score</div><div class="metric-value">${avgScore}</div><div class="metric-sub" style="color:${avgScore>=80?'var(--success)':avgScore>=50?'var(--warn)':'var(--danger)'}">${avgScore>=80?'Gut':avgScore>=50?'Verbesserbar':'Optimieren!'}</div></div>`;
+  const top5=[...listings].sort((a,b)=>(b.views||0)-(a.views||0)).slice(0,5);
+  const mx=top5[0]?.views||1;
+  document.getElementById('topBars').innerHTML=top5.map(l=>{
+    const pct=Math.round(((l.views||0)/mx)*100);
+    return `<div class="bar-row"><span class="bar-label">${(l.title||'').substring(0,18)}</span><div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div><span class="bar-val">${(l.views||0).toLocaleString()}</span></div>`;
+  }).join('');
+  document.getElementById('listingList').innerHTML=listings.map((l,i)=>{
+    const score=seoScore(l);const sc=scoreClass(score);
+    return `<div class="listing-item">
+      <div class="listing-num">${i+1}</div>
+      <div class="listing-info" onclick="openModal(${i})">
+        <div class="listing-title">${l.title||'Ohne Titel'}</div>
+        <div class="listing-meta"><span>👁 ${(l.views||0).toLocaleString()}</span><span>❤️ ${l.favs||0}</span><span>🛒 ${l.sales||0}</span><span>💵 $${(l.price||0).toFixed(2)}</span><span>🏷 ${getTags(l).length}/13</span></div>
+      </div>
+      <div class="listing-score ${sc}">${score}</div>
+      <button onclick="deleteListing(${i})" style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:4px;flex-shrink:0">🗑</button>
+    </div>`;
+  }).join('');
+}
+
+// ══ SEO ══
+function renderSeo(){
+  const hasData=listings.length>0;
+  document.getElementById('seoEmpty').style.display=hasData?'none':'block';
+  document.getElementById('seoContent').style.display=hasData?'block':'none';
+  if(!hasData)return;
+  const sorted=[...listings].map((l,i)=>({l,i,score:seoScore(l)})).sort((a,b)=>b.score-a.score);
+  document.getElementById('seoList').innerHTML=sorted.map(({l,i,score})=>{
+    const sc=scoreClass(score),tgs=getTags(l),len=(l.title||'').length;
+    const oks=[],issues=[];
+    if(len>=100)oks.push('Guter Titel');else if(len>=50)issues.push(`Titel kurz (${len}/140)`);else issues.push('Titel zu kurz!');
+    if(tgs.length===13)oks.push('13/13 Tags');else issues.push(`${tgs.length}/13 Tags`);
+    const tw=(l.title||'').toLowerCase().split(/\s+/).filter(w=>w.length>3);
+    const mc=tgs.filter(t=>tw.some(w=>t.toLowerCase().includes(w))).length;
+    if(mc>=3)oks.push(`${mc} Keywords ✓`);else issues.push(`${mc} Keywords matchen`);
+    return `<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div class="listing-score ${sc}" style="width:34px;height:34px;font-size:12px">${score}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px">${(l.title||'').substring(0,42)}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:3px">${oks.map(o=>`<span style="font-size:10px;padding:2px 6px;border-radius:20px;background:var(--success-bg);color:var(--success)">✓ ${o}</span>`).join('')}${issues.map(i=>`<span style="font-size:10px;padding:2px 6px;border-radius:20px;background:var(--danger-bg);color:var(--danger)">✗ ${i}</span>`).join('')}</div>
+      </div>
+      <button onclick="openModal(${i})" style="background:none;border:none;color:var(--orange);font-size:12px;cursor:pointer;flex-shrink:0;padding:4px">✏️</button>
+    </div>`;
+  }).join('');
+}
+
+// ══ TAGS ══
+function renderTags(){
+  const hasData=listings.length>0;
+  document.getElementById('tagsEmpty').style.display=hasData?'none':'block';
+  document.getElementById('tagsContent').style.display=hasData?'block':'none';
+  if(!hasData)return;
+  const tc={};
+  listings.forEach(l=>getTags(l).forEach(t=>{tc[t]=(tc[t]||0)+1;}));
+  const sorted=Object.entries(tc).sort((a,b)=>b[1]-a[1]);
+  const mx=sorted[0]?.[1]||1;
+  const colors=[['#FDE8DC','#F1641E'],['#EAF3DE','#3B6D11'],['#E6F1FB','#185FA5'],['#FAEEDA','#854F0B'],['#EEEDFE','#534AB7'],['#E1F5EE','#0F6E56']];
+  document.getElementById('tagCloud').innerHTML=`<div class="tag-cloud">${sorted.map(([tag,count],i)=>{const size=11+Math.round((count/mx)*5);const[bg,fg]=colors[i%colors.length];return `<span class="tag-pill" style="background:${bg};color:${fg};font-size:${size}px" onclick="doCopy('${tag}')">${tag} <span style="opacity:.4;font-size:10px">${count}</span></span>`;}).join('')}</div>`;
+  document.getElementById('kwMatch').innerHTML=listings.map(l=>{
+    const tgs=getTags(l);
+    const tw=(l.title||'').toLowerCase().split(/\s+/).filter(w=>w.length>3);
+    const matched=tgs.filter(t=>tw.some(w=>t.toLowerCase().includes(w)));
+    const unmatched=tgs.filter(t=>!tw.some(w=>t.toLowerCase().includes(w)));
+    return `<div class="kw-row"><div class="kw-title">${(l.title||'').substring(0,40)}</div><div class="kw-pills">${matched.map(t=>`<span class="kw-pill match">✓ ${t}</span>`).join('')}${unmatched.slice(0,4).map(t=>`<span class="kw-pill miss">${t}</span>`).join('')}</div></div>`;
+  }).join('');
+}
+
+// ══ AI PICKER ══
+function renderAiPicker(){
+  const hasData=listings.length>0;
+  document.getElementById('aiEmpty').style.display=hasData?'none':'block';
+  document.getElementById('aiPanel').style.display=hasData?'block':'none';
+  if(!hasData)return;
+  const picker=document.getElementById('listingPicker');
+  picker.innerHTML='<option value="">— Listing auswählen —</option>';
+  listings.forEach((l,i)=>{const opt=document.createElement('option');opt.value=i;opt.textContent=(l.title||'Listing '+i).substring(0,60);picker.appendChild(opt);});
+}
+
+// ══ AI OPTIMIZE ══
+async function runAiOptimize(){
+  const idx=document.getElementById('listingPicker').value;
+  if(idx===''){alert('Bitte ein Listing auswählen.');return;}
+  const l=listings[parseInt(idx)];
+  const btn=document.getElementById('aiBtn'),resultEl=document.getElementById('aiResult');
+  btn.disabled=true;btn.innerHTML='<div class="spinner-p"></div> Analysiert…';
+  resultEl.className='ai-result visible';
+  document.getElementById('aiTitleText').innerHTML='<span style="color:var(--muted);font-size:12px">Wird generiert…</span>';
+  ['aiTagsGrid','aiTagCats','aiChecklist'].forEach(id=>document.getElementById(id).innerHTML='');
+  document.getElementById('aiTip').innerHTML='';
+  document.getElementById('aiTitleChars').textContent='';
+  const prompt=`You are an Etsy SEO specialist for the US market. Generate an optimized listing using this exact methodology.
+
+METHODOLOGY:
+1. ACCURACY IS EVERYTHING: Every keyword must be genuinely true of the product. Never mislead buyers.
+2. TITLE: Use close to 140 characters. Structure: [Descriptive Keywords] [Anchor], [Descriptive Keywords] [Anchor], repeat. Anchors = what product IS + what it functions as (Gift For Her, Home Decor, etc.). Zero word repetition (except compound anchors). Standard title case.
+3. TAGS: Exactly 13 tags, max 20 chars each, min 2 words. Zero overlap with title words (plurals count). Avoid anchor noun in tags. Organize by 5 W's: WHO, WHAT, WHERE, WHEN, WHY. US English, US buyer behavior.
+4. SELF-CHECK: verify no title repetition, no tag/title overlap, all accurate, title<=140, 13 tags, each<=20 chars.
+
+PRODUCT:
+Title (${(l.title||'').length} chars): "${l.title||''}"
+Tags (${getTags(l).length}/13): ${getTags(l).join(', ')||'none'}
+Price: $${(l.price||0).toFixed(2)} | Views: ${l.views||0} | Favorites: ${l.favs||0}
+Shop: MaisonPetiteLumiere (French-inspired handmade/artisan, selling to US market)
+
+Respond ONLY in JSON, no text before or after:
+{"optimizedTitle":"...","optimizedTags":["tag1","tag2","tag3","tag4","tag5","tag6","tag7","tag8","tag9","tag10","tag11","tag12","tag13"],"tagCategories":{"WHO":["tag","tag"],"WHAT":["tag","tag"],"WHERE":["tag","tag"],"WHEN":["tag","tag"],"WHY":["tag","tag","tag"]},"explanation":"3-4 Saetze auf Deutsch.","checklist":{"titleLength":true,"zeroTitleRepetition":true,"zeroTagTitleOverlap":true,"allTagsUsed":true,"everyTagUnder20Chars":true,"accuracyConfirmed":true}}`;
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1500,messages:[{role:'user',content:prompt}]})});
+    const data=await res.json();
+    const parsed=JSON.parse(data.content.map(c=>c.text||'').join('').trim().replace(/```json|```/g,'').trim());
+    const newTitle=parsed.optimizedTitle||'';
+    document.getElementById('aiTitleText').textContent=newTitle;
+    const tlen=newTitle.length;
+    const ch=document.getElementById('aiTitleChars');
+    ch.textContent=`${tlen}/140 · ${tlen>=120&&tlen<=140?'✓ Perfekt':tlen<120?'Etwas kurz':'Zu lang!'}`;
+    ch.className='char-hint'+(tlen>140?' over':'');
+    lastAiTags=parsed.optimizedTags||[];
+    document.getElementById('aiTagsGrid').innerHTML=lastAiTags.map(tag=>{const len=tag.length;const over=len>20;return `<span class="ai-tag" onclick="doCopy('${tag.replace(/'/g,"\\'")}')"><span style="${over?'color:var(--danger)':''}">🏷 ${tag}</span><span class="tag-char">${len}/20</span></span>`;}).join('');
+    const cats=parsed.tagCategories||{};
+    const catL={'WHO':'👤 WHO','WHAT':'⚙️ WHAT','WHERE':'📍 WHERE','WHEN':'📅 WHEN','WHY':'💡 WHY'};
+    document.getElementById('aiTagCats').innerHTML=Object.entries(catL).map(([k,v])=>{const t=cats[k]||[];return t.length?`<div><span style="font-weight:500;color:var(--text)">${v}:</span> ${t.join(', ')}</div>`:''}).join('');
+    document.getElementById('aiTip').textContent=parsed.explanation||'';
+    const cl=parsed.checklist||{};
+    document.getElementById('aiChecklist').innerHTML=[['titleLength','Titel nahe 140'],['zeroTitleRepetition','Keine Wiederholung'],['zeroTagTitleOverlap','Kein Tag/Titel-Overlap'],['allTagsUsed','13 Tags genutzt'],['everyTagUnder20Chars','Alle Tags ≤20 Zeichen'],['accuracyConfirmed','Keywords korrekt']].map(([k,label])=>`<div class="check-item"><div class="check-label">${label}</div><div class="check-val" style="color:${cl[k]?'var(--success)':'var(--danger)'}">${cl[k]?'✓ Ja':'✗ Nein'}</div></div>`).join('');
+  }catch(e){document.getElementById('aiTitleText').innerHTML=`<span style="color:var(--danger)">Fehler: ${e.message}</span>`;}
+  btn.disabled=false;btn.innerHTML='<span>✨</span> Erneut optimieren';
+}
+function copyAllAiTags(){if(lastAiTags.length)doCopy(lastAiTags.join(', '));else alert('Noch keine Tags generiert.');}
+
+// ══ COMPETITOR ══
+async function runCompetitor(){
+  const keyword=document.getElementById('compKeyword').value.trim();
+  if(!keyword){alert('Bitte ein Keyword eingeben.');return;}
+  const btn=document.getElementById('compBtn');
+  btn.disabled=true;btn.innerHTML='<div class="spinner-t"></div> Analysiere…';
+  document.getElementById('compResult').innerHTML='';
+  const prompt=`You are an Etsy SEO expert. A seller (MaisonPetiteLumiere, French-inspired handmade/artisan shop, US market) wants to understand top-ranking Etsy listings for: "${keyword}".
+
+Generate a realistic competitive analysis with 5 fictional but realistic top-ranking competitor listings and actionable insights.
+
+Respond ONLY in JSON:
+{"competitors":[{"title":"...","strength":"...","tags":["tag1","tag2","tag3"],"score":85},{"title":"...","strength":"...","tags":["tag1","tag2","tag3"],"score":78},{"title":"...","strength":"...","tags":["tag1","tag2","tag3"],"score":72},{"title":"...","strength":"...","tags":["tag1","tag2","tag3"],"score":65},{"title":"...","strength":"...","tags":["tag1","tag2","tag3"],"score":60}],"gaps":["Luecke 1 auf Deutsch","Luecke 2 auf Deutsch","Luecke 3 auf Deutsch"],"recommendations":["Empfehlung 1 auf Deutsch","Empfehlung 2 auf Deutsch","Empfehlung 3 auf Deutsch"]}`;
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1500,messages:[{role:'user',content:prompt}]})});
+    const data=await res.json();
+    const parsed=JSON.parse(data.content.map(c=>c.text||'').join('').trim().replace(/```json|```/g,'').trim());
+    let html=`<div style="font-family:'Playfair Display',serif;font-size:15px;padding:14px 0 8px">Top 5 für "${keyword}"</div>`;
+    html+=parsed.competitors.map((c,i)=>`<div class="card"><div class="card-body"><div class="comp-row"><div class="comp-title-text">${i+1}. ${c.title}</div><div class="comp-meta"><span class="comp-badge ${c.score>=75?'top':'mid'}">~${c.score}</span>${c.strength}</div><div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px">${c.tags.map(t=>`<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:var(--info-bg);color:var(--info)">${t}</span>`).join('')}</div></div></div></div>`).join('');
+    html+=`<div class="card"><div class="card-header">🎯 Lücken für dich</div><div class="card-body">${parsed.gaps.map(g=>`<div style="font-size:12px;padding:5px 0;border-bottom:1px solid var(--border)">→ ${g}</div>`).join('')}</div></div>`;
+    html+=`<div class="card"><div class="card-header">✅ Empfehlungen</div><div class="card-body">${parsed.recommendations.map((r,i)=>`<div style="font-size:12px;padding:6px 0;border-bottom:1px solid var(--border);display:flex;gap:8px"><span style="color:var(--orange);font-weight:500;flex-shrink:0">${i+1}.</span><span>${r}</span></div>`).join('')}</div></div>`;
+    document.getElementById('compResult').innerHTML=html;
+  }catch(e){document.getElementById('compResult').innerHTML=`<div class="card"><div class="card-body" style="color:var(--danger);font-size:13px">Fehler: ${e.message}</div></div>`;}
+  btn.disabled=false;btn.innerHTML='<span>🔎</span> Analysieren';
+}
+
+// ══ SEASONAL ══
+const now=new Date(),curMonth=now.getMonth()+1;
+const SEASONS={
+  'Valentinstag':{emoji:'❤️',month:2,urgency:'hot',tags:['valentines gift','gift for wife','love gift','romantic decor','gift for girlfriend','couples gift','heart decor','anniversary gift','gift for husband','french love decor','bedroom gift','sweet home gift','love home decor'],tip:'Valentinstag ist im Februar der heißeste Suchmonat. Jetzt sofort Tags hinzufügen — Käufer suchen 4–6 Wochen vorher.',color:['#FCEBEB','#A32D2D']},
+  'St. Patricks':{emoji:'🍀',month:3,urgency:'warm',tags:['st patricks day','irish home decor','lucky home gift','green home decor','spring gift','luck decor','shamrock gift','spring home gift','clover decor','irish gift','spring wall art','green wall decor','luck of irish'],tip:'St. Patricks Day ist ein wachsender US-Markt. 2–3 Tags zu passenden Listings hinzufügen.',color:['#EAF3DE','#3B6D11']},
+  'Muttertag':{emoji:'💐',month:5,urgency:'warm',tags:['mothers day gift','gift for mom','mom birthday gift','from daughter gift','mothers day decor','floral gift mom','gift for grandma','new mom gift','mom home decor','gift for wife','mama gift','french mom gift','mom wall art'],tip:'Muttertag (2. Sonntag im Mai) ist der zweitgrößte Etsy-Tag. Vorbereitung 8 Wochen vorher beginnen!',color:['#FDE8DC','#F1641E']},
+  'Sommer':{emoji:'☀️',month:7,urgency:'cool',tags:['summer home decor','beach house decor','coastal decor','summer gift','outdoor decor','boho summer gift','vacation home gift','summer wall art','lake house decor','summer entertaining','fresh home decor','light home decor','sunny decor'],tip:'Sommer-Tags performen Juni–August. Käufer suchen frische, helle Dekorationsstücke.',color:['#FAEEDA','#854F0B']},
+  'Halloween':{emoji:'🎃',month:10,urgency:'cool',tags:['halloween decor','spooky home decor','halloween gift','witchy decor','gothic home gift','halloween wall art','dark home decor','fall halloween gift','haunted decor','october gift','magic decor','halloween home gift','witch decor'],tip:'Halloween-Tags ab August hinzufügen. Etsy braucht Zeit zum Indexieren — 10 Wochen vorher optimieren.',color:['#FDE8DC','#F1641E']},
+  'Thanksgiving':{emoji:'🦃',month:11,urgency:'cool',tags:['thanksgiving decor','fall home decor','harvest gift','autumn decor gift','thanksgiving gift','rustic fall decor','grateful home gift','fall table decor','november decor','cozy fall gift','autumn wall art','fall entertaining','harvest decor'],tip:'Thanksgiving und Fall Decor performen September–November. Mit Halloween-Tags kombinieren.',color:['#FAEEDA','#854F0B']},
+  'Christmas':{emoji:'🎄',month:12,urgency:'warm',tags:['christmas gift','holiday home decor','christmas decor','holiday gift','stocking stuffer','gift under 50','christmas home gift','french christmas','cozy holiday gift','holiday wall art','christmas table','gift for her xmas','winter home decor'],tip:'Weihnachten = umsatzstärkster Monat. Optimierung MUSS bis Oktober fertig sein.',color:['#EAF3DE','#3B6D11']},
+  'Neujahr':{emoji:'🥂',month:1,urgency:'cool',tags:['new year decor','fresh start gift','new home gift','housewarming gift','january home decor','new beginnings gift','resolution gift','clean home gift','minimalist new year','fresh home decor','new chapter gift','renewal gift','winter home gift'],tip:'Januar ideal für Housewarming und "New Home"-Keywords — viele Käufer ziehen nach Feiertagen um.',color:['#E6F1FB','#185FA5']},
+};
+function initSeasonal(){
+  const order=Object.keys(SEASONS).sort((a,b)=>{const ma=SEASONS[a].month,mb=SEASONS[b].month;return((ma-curMonth+12)%12)-((mb-curMonth+12)%12);});
+  document.getElementById('seasonTabs').innerHTML=order.map((s,i)=>`<button class="season-tab${i===0?' active':''}" onclick="showSeason('${s}',this)">${SEASONS[s].emoji} ${s}</button>`).join('');
+  showSeason(order[0],document.querySelector('.season-tab.active'));
+  const mn=['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+  document.getElementById('seasonCalendar').innerHTML=order.map(name=>{const s=SEASONS[name];const ma=(s.month-curMonth+12)%12;return `<div style="display:flex;align-items:center;gap:8px"><span style="font-size:14px">${s.emoji}</span><span style="flex:1">${name}</span><span style="color:var(--muted);font-size:11px">${mn[s.month-1]} · in ${ma} Mon.</span></div>`;}).join('');
+}
+function showSeason(name,btn){
+  document.querySelectorAll('.season-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  const s=SEASONS[name];
+  const ma=(s.month-curMonth+12)%12;
+  const um={hot:'🔥 Jetzt sofort hinzufügen!',warm:'⚡ Bald optimieren — '+ma+' Monate',cool:'📅 Noch Zeit — '+ma+' Monate'};
+  const ue=document.getElementById('seasonUrgency');
+  ue.className='season-urgency '+s.urgency;ue.textContent=um[s.urgency];
+  document.getElementById('seasonCardTitle').textContent=s.emoji+' Tags für '+name;
+  document.getElementById('seasonTagsEl').innerHTML=s.tags.map(t=>`<span class="season-tag" style="background:${s.color[0]};color:${s.color[1]}" onclick="doCopy('${t}')">${t}</span>`).join('');
+  document.getElementById('seasonTip').textContent=s.tip;
+}
+initSeasonal();
+
+// ══ COPY ══
+function doCopy(text){
+  if(navigator.clipboard){navigator.clipboard.writeText(text).then(showToast).catch(()=>fb(text));}else fb(text);
+}
+function fb(text){const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);showToast();}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg||'Kopiert ✓';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1600);}
+
+// ══ INIT ══
+renderAll();
+</script>
+</body>
+</html>
