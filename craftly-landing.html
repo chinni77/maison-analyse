@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>[NAME] — The Handmade Marketplace, Reimagined</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --rose:#C4687A;--rose-light:#F2D4DA;--rose-dark:#8B3D4E;
+  --cream:#FAF6F1;--warm:#F5EDE3;--sand:#E8D5C0;
+  --text:#2C1810;--muted:#8B7355;--white:#FFFFFF;
+  --teal:#2D7A6B;--teal-light:#E0F0EC;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);overflow-x:hidden}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:18px 5%;display:flex;align-items:center;justify-content:space-between;background:rgba(250,246,241,0.92);backdrop-filter:blur(8px);border-bottom:1px solid rgba(196,104,122,0.15)}
+.nav-logo{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--rose-dark);letter-spacing:1px}
+.nav-logo span{color:var(--rose)}
+.nav-cta{padding:10px 22px;background:var(--rose);color:white;border:none;border-radius:30px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;text-decoration:none;transition:background .2s}
+.nav-cta:hover{background:var(--rose-dark)}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:120px 5% 80px;position:relative;overflow:hidden}
+.hero-bg{position:absolute;inset:0;background:var(--cream)}
+.hero-circle-1{position:absolute;width:500px;height:500px;border-radius:50%;background:var(--rose-light);opacity:.35;top:-100px;right:-100px}
+.hero-circle-2{position:absolute;width:350px;height:350px;border-radius:50%;background:var(--sand);opacity:.4;bottom:-80px;left:-80px}
+.hero-circle-3{position:absolute;width:200px;height:200px;border-radius:50%;background:var(--teal-light);opacity:.4;top:40%;left:5%}
+.hero-content{position:relative;z-index:1;max-width:720px}
+.hero-badge{display:inline-block;padding:7px 18px;background:var(--rose-light);color:var(--rose-dark);border-radius:30px;font-size:12px;font-weight:500;letter-spacing:.5px;margin-bottom:24px}
+.hero h1{font-family:'Cormorant Garamond',serif;font-size:clamp(42px,7vw,80px);font-weight:300;line-height:1.1;color:var(--text);margin-bottom:20px}
+.hero h1 em{color:var(--rose);font-style:italic}
+.hero p{font-size:17px;color:var(--muted);line-height:1.7;max-width:520px;margin:0 auto 36px}
+.hero-form{display:flex;gap:10px;max-width:460px;margin:0 auto 16px;flex-wrap:wrap;justify-content:center}
+.hero-form input{flex:1;min-width:220px;padding:14px 20px;border:1.5px solid var(--sand);border-radius:30px;font-family:'DM Sans',sans-serif;font-size:14px;background:white;color:var(--text);outline:none}
+.hero-form input:focus{border-color:var(--rose)}
+.hero-form button{padding:14px 28px;background:var(--rose);color:white;border:none;border-radius:30px;font-size:14px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s;white-space:nowrap}
+.hero-form button:hover{background:var(--rose-dark)}
+.hero-note{font-size:12px;color:var(--muted)}
+.hero-stats{display:flex;gap:40px;justify-content:center;margin-top:56px;flex-wrap:wrap}
+.hero-stat{text-align:center}
+.hero-stat-num{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:400;color:var(--rose-dark)}
+.hero-stat-label{font-size:12px;color:var(--muted);margin-top:2px}
+
+/* SCROLLING BANNER */
+.banner{background:var(--rose-dark);padding:14px 0;overflow:hidden;white-space:nowrap}
+.banner-inner{display:inline-block;animation:scroll 25s linear infinite}
+.banner-inner span{font-size:13px;color:var(--rose-light);letter-spacing:2px;padding:0 32px}
+.banner-inner span::after{content:"✦";margin-left:32px;color:var(--rose)}
+@keyframes scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* PROBLEM SECTION */
+.section{padding:90px 5%}
+.section-label{font-size:11px;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:var(--rose);margin-bottom:14px}
+.section-title{font-family:'Cormorant Garamond',serif;font-size:clamp(32px,5vw,52px);font-weight:300;line-height:1.2;color:var(--text);margin-bottom:16px}
+.section-sub{font-size:16px;color:var(--muted);line-height:1.7;max-width:560px}
+
+.problem{background:var(--warm)}
+.problem-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
+.problem-cards{display:flex;flex-direction:column;gap:14px}
+.problem-card{background:white;border-radius:16px;padding:20px 24px;border-left:3px solid var(--rose);display:flex;align-items:flex-start;gap:14px}
+.problem-icon{font-size:22px;flex-shrink:0;margin-top:2px}
+.problem-card-title{font-size:14px;font-weight:500;color:var(--text);margin-bottom:4px}
+.problem-card-sub{font-size:13px;color:var(--muted);line-height:1.5}
+
+/* FEES */
+.fees{max-width:900px;margin:0 auto;text-align:center}
+.fees-table{background:white;border-radius:20px;overflow:hidden;margin-top:48px;border:1px solid var(--sand)}
+.fees-header{display:grid;grid-template-columns:1fr 1fr 1fr;background:var(--warm);padding:16px 24px}
+.fees-header-cell{font-size:12px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.fees-header-cell:last-child{color:var(--rose-dark)}
+.fees-row{display:grid;grid-template-columns:1fr 1fr 1fr;padding:16px 24px;border-top:1px solid var(--sand);align-items:center}
+.fees-row:hover{background:var(--cream)}
+.fees-name{font-size:14px;color:var(--text)}
+.fees-etsy{font-size:14px;color:#C0392B;font-weight:500}
+.fees-ours{font-size:14px;color:var(--teal);font-weight:500}
+.fees-saving{display:inline-block;font-size:11px;padding:3px 10px;background:var(--teal-light);color:var(--teal);border-radius:20px;margin-left:6px}
+
+/* FEATURES */
+.features{background:var(--warm)}
+.features-inner{max-width:1100px;margin:0 auto}
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:48px}
+.feature-card{background:white;border-radius:20px;padding:28px;border:1px solid var(--sand);transition:border-color .2s}
+.feature-card:hover{border-color:var(--rose)}
+.feature-emoji{font-size:32px;margin-bottom:16px}
+.feature-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:var(--text);margin-bottom:8px}
+.feature-sub{font-size:13px;color:var(--muted);line-height:1.6}
+.feature-badge{display:inline-block;font-size:10px;padding:3px 10px;background:var(--rose-light);color:var(--rose-dark);border-radius:20px;margin-top:12px;font-weight:500}
+
+/* TESTIMONIALS */
+.testimonials{max-width:1000px;margin:0 auto;text-align:center}
+.testimonials-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:48px}
+.testimonial{background:white;border-radius:20px;padding:24px;border:1px solid var(--sand);text-align:left}
+.testimonial-quote{font-family:'Cormorant Garamond',serif;font-size:17px;font-style:italic;color:var(--text);line-height:1.6;margin-bottom:16px}
+.testimonial-author{display:flex;align-items:center;gap:10px}
+.testimonial-avatar{width:36px;height:36px;border-radius:50%;background:var(--rose-light);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;color:var(--rose-dark)}
+.testimonial-name{font-size:13px;font-weight:500;color:var(--text)}
+.testimonial-shop{font-size:11px;color:var(--muted)}
+.stars{color:var(--rose);font-size:12px;margin-bottom:10px}
+
+/* CTA */
+.cta-section{background:var(--rose-dark);padding:90px 5%;text-align:center;position:relative;overflow:hidden}
+.cta-circle{position:absolute;width:400px;height:400px;border-radius:50%;background:rgba(255,255,255,0.05)}
+.cta-circle-1{top:-150px;left:-100px}
+.cta-circle-2{bottom:-150px;right:-100px}
+.cta-section h2{font-family:'Cormorant Garamond',serif;font-size:clamp(36px,5vw,60px);font-weight:300;color:white;margin-bottom:16px;position:relative}
+.cta-section p{font-size:16px;color:rgba(255,255,255,0.7);margin-bottom:36px;position:relative}
+.cta-form{display:flex;gap:10px;max-width:440px;margin:0 auto;flex-wrap:wrap;justify-content:center;position:relative}
+.cta-form input{flex:1;min-width:220px;padding:14px 20px;border:none;border-radius:30px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none}
+.cta-form button{padding:14px 28px;background:var(--rose);color:white;border:none;border-radius:30px;font-size:14px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif}
+.cta-form button:hover{background:#B5566A}
+
+/* FOOTER */
+footer{background:var(--text);padding:40px 5%;text-align:center}
+footer p{font-size:13px;color:rgba(255,255,255,0.4)}
+footer span{color:var(--rose)}
+
+/* ANIMATIONS */
+@keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+.fade-up{animation:fadeUp .8s ease forwards}
+.fade-up-2{animation:fadeUp .8s ease .2s forwards;opacity:0}
+.fade-up-3{animation:fadeUp .8s ease .4s forwards;opacity:0}
+.fade-up-4{animation:fadeUp .8s ease .6s forwards;opacity:0}
+
+/* SUCCESS */
+.success-msg{display:none;padding:12px 20px;background:var(--teal-light);color:var(--teal);border-radius:30px;font-size:13px;font-weight:500;margin-top:12px}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .problem-inner{grid-template-columns:1fr}
+  .features-grid{grid-template-columns:1fr}
+  .testimonials-grid{grid-template-columns:1fr}
+  .fees-row,.fees-header{grid-template-columns:1fr 1fr 1fr;font-size:12px;padding:12px 14px}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">[<span>N</span>AME]</div>
+  <a href="#waitlist" class="nav-cta">Join Waitlist</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-circle-1"></div>
+  <div class="hero-circle-2"></div>
+  <div class="hero-circle-3"></div>
+  <div class="hero-content">
+    <div class="hero-badge fade-up">✦ Coming Soon — Join the Waitlist</div>
+    <h1 class="fade-up-2">The marketplace <em>made for makers,</em> not shareholders.</h1>
+    <p class="fade-up-3">Finally a home for your handmade business — with half the fees, built-in AI tools, and a community that actually supports you.</p>
+    <div class="hero-form fade-up-4" id="waitlist">
+      <input type="email" id="heroEmail" placeholder="Enter your email address...">
+      <button onclick="joinWaitlist('heroEmail','heroSuccess')">Join the Waitlist →</button>
+    </div>
+    <div class="success-msg" id="heroSuccess">🎉 You're on the list! We'll be in touch soon.</div>
+    <p class="hero-note fade-up-4">Free forever for early members · No credit card needed</p>
+    <div class="hero-stats fade-up-4">
+      <div class="hero-stat"><div class="hero-stat-num">3.5%</div><div class="hero-stat-label">Transaction fee (vs 6.5% on Etsy)</div></div>
+      <div class="hero-stat"><div class="hero-stat-num">Free</div><div class="hero-stat-label">Listing fee (vs $0.20 on Etsy)</div></div>
+      <div class="hero-stat"><div class="hero-stat-num">✨ AI</div><div class="hero-stat-label">Built-in SEO optimization</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- BANNER -->
+<div class="banner">
+  <div class="banner-inner">
+    <span>HANDMADE WITH LOVE</span><span>LOWER FEES</span><span>AI POWERED</span><span>GLOBAL COMMUNITY</span><span>SELLER FIRST</span><span>HANDMADE WITH LOVE</span><span>LOWER FEES</span><span>AI POWERED</span><span>GLOBAL COMMUNITY</span><span>SELLER FIRST</span><span>HANDMADE WITH LOVE</span><span>LOWER FEES</span><span>AI POWERED</span><span>GLOBAL COMMUNITY</span><span>SELLER FIRST</span>
+  </div>
+</div>
+
+<!-- PROBLEM -->
+<section class="section problem">
+  <div class="problem-inner">
+    <div>
+      <div class="section-label">The Problem</div>
+      <h2 class="section-title">Etsy was built for makers. Then it forgot about them.</h2>
+      <p class="section-sub">Sellers are frustrated. Fees keep rising, algorithms keep changing, and support is nowhere to be found. You deserve better.</p>
+    </div>
+    <div class="problem-cards">
+      <div class="problem-card">
+        <div class="problem-icon">💸</div>
+        <div><div class="problem-card-title">Fees eating your profit</div><div class="problem-card-sub">Listing fees, transaction fees, payment fees, ads fees — Etsy takes up to 20% of every sale.</div></div>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">📉</div>
+        <div><div class="problem-card-title">Algorithm changes overnight</div><div class="problem-card-sub">No warning, no explanation. Your shop drops in search and nobody tells you why.</div></div>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">🤷</div>
+        <div><div class="problem-card-title">Zero seller support</div><div class="problem-card-sub">Customer service that takes days, bots instead of humans, and no real help when you need it.</div></div>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">🏭</div>
+        <div><div class="problem-card-title">Mass-produced flooding the market</div><div class="problem-card-sub">Your handmade products compete with dropshippers and factories. It's not a fair fight.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEES -->
+<section class="section">
+  <div class="fees">
+    <div class="section-label" style="text-align:center">The Numbers</div>
+    <h2 class="section-title" style="text-align:center">Keep more of what you earn.</h2>
+    <div class="fees-table">
+      <div class="fees-header">
+        <div class="fees-header-cell">Fee Type</div>
+        <div class="fees-header-cell">Etsy</div>
+        <div class="fees-header-cell">[NAME]</div>
+      </div>
+      <div class="fees-row"><span class="fees-name">Listing fee</span><span class="fees-etsy">$0.20 per item</span><span class="fees-ours">Free ✓<span class="fees-saving">Save $0.20</span></span></div>
+      <div class="fees-row"><span class="fees-name">Transaction fee</span><span class="fees-etsy">6.5%</span><span class="fees-ours">3.5% ✓<span class="fees-saving">Save 3%</span></span></div>
+      <div class="fees-row"><span class="fees-name">Payment processing</span><span class="fees-etsy">3% + $0.25</span><span class="fees-ours">2.5% + $0.15 ✓</span></div>
+      <div class="fees-row"><span class="fees-name">Monthly subscription</span><span class="fees-etsy">$10/mo (Etsy Plus)</span><span class="fees-ours">Free forever ✓</span></div>
+      <div class="fees-row"><span class="fees-name">Advertising</span><span class="fees-etsy">Up to 15%</span><span class="fees-ours">Optional & fair ✓</span></div>
+      <div class="fees-row" style="background:var(--teal-light)"><span class="fees-name" style="font-weight:500">On a $50 sale you save</span><span class="fees-etsy">—</span><span class="fees-ours" style="font-size:18px;font-weight:500">~$4.10 ✓</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section features">
+  <div class="features-inner">
+    <div class="section-label">Why [NAME]</div>
+    <h2 class="section-title">Everything Etsy should have been.</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-emoji">✨</div>
+        <div class="feature-title">AI Listing Optimizer</div>
+        <div class="feature-sub">Built-in AI writes perfect titles and tags for you — optimized for search, accurate to your product, zero extra cost.</div>
+        <div class="feature-badge">Exclusive Feature</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-emoji">💰</div>
+        <div class="feature-title">Half the Fees</div>
+        <div class="feature-sub">3.5% transaction fee. No listing fees. No forced subscriptions. Keep the money you worked hard to earn.</div>
+        <div class="feature-badge">Seller First</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-emoji">🌍</div>
+        <div class="feature-title">Global from Day One</div>
+        <div class="feature-sub">Auto-translation in 20+ languages. Your listings reach buyers worldwide without any extra work from you.</div>
+        <div class="feature-badge">Worldwide</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-emoji">👥</div>
+        <div class="feature-title">Real Community</div>
+        <div class="feature-sub">Seller forums, live Q&A, tutorials, and mentoring. Learn from the best makers around the world.</div>
+        <div class="feature-badge">Together</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-emoji">📊</div>
+        <div class="feature-title">Real Analytics</div>
+        <div class="feature-sub">Know exactly why your listings perform — and what to fix. No guessing, no black box algorithm surprises.</div>
+        <div class="feature-badge">Transparent</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-emoji">🛡️</div>
+        <div class="feature-title">Handmade Only</div>
+        <div class="feature-sub">Strict verification means no dropshippers, no factories. Every product is genuinely handmade. Your competition is fair.</div>
+        <div class="feature-badge">Protected</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="section">
+  <div class="testimonials">
+    <div class="section-label">Early Voices</div>
+    <h2 class="section-title">Makers are ready for something better.</h2>
+    <div class="testimonials-grid">
+      <div class="testimonial">
+        <div class="stars">★★★★★</div>
+        <div class="testimonial-quote">"Etsy took $340 in fees last month. I can't wait for an alternative that actually cares about sellers."</div>
+        <div class="testimonial-author"><div class="testimonial-avatar">SL</div><div><div class="testimonial-name">Sophie L.</div><div class="testimonial-shop">Ceramic jewelry maker, France</div></div></div>
+      </div>
+      <div class="testimonial">
+        <div class="stars">★★★★★</div>
+        <div class="testimonial-quote">"The algorithm changed and my sales dropped 60% overnight. I need a platform that's transparent and fair."</div>
+        <div class="testimonial-author"><div class="testimonial-avatar">MK</div><div><div class="testimonial-name">Maya K.</div><div class="testimonial-shop">Handmade candles, USA</div></div></div>
+      </div>
+      <div class="testimonial">
+        <div class="stars">★★★★★</div>
+        <div class="testimonial-quote">"I've been waiting for a marketplace that puts makers first. Sign me up immediately."</div>
+        <div class="testimonial-author"><div class="testimonial-avatar">AR</div><div><div class="testimonial-name">Anna R.</div><div class="testimonial-shop">Textile art, Germany</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="cta-circle cta-circle-1"></div>
+  <div class="cta-circle cta-circle-2"></div>
+  <h2>Be the first to sell on [NAME].</h2>
+  <p>Join the waitlist today. Early members get 6 months at 0% commission — free.</p>
+  <div class="cta-form">
+    <input type="email" id="ctaEmail" placeholder="Your email address...">
+    <button onclick="joinWaitlist('ctaEmail','ctaSuccess')">Join Now →</button>
+  </div>
+  <div class="success-msg" id="ctaSuccess" style="display:none;color:white;background:rgba(255,255,255,0.15)">🎉 You're on the list! We'll be in touch soon.</div>
+  <p style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:14px;position:relative">No spam. Just updates on our launch. Unsubscribe anytime.</p>
+</section>
+
+<footer>
+  <p>© 2025 <span>[NAME]</span> — The handmade marketplace, reimagined. Made with ♥ for makers worldwide.</p>
+</footer>
+
+<script>
+let waitlist = JSON.parse(localStorage.getItem('waitlist') || '[]');
+
+function joinWaitlist(inputId, successId) {
+  const email = document.getElementById(inputId).value.trim();
+  if (!email || !email.includes('@')) {
+    alert('Please enter a valid email address.');
+    return;
+  }
+  if (!waitlist.includes(email)) {
+    waitlist.push(email);
+    localStorage.setItem('waitlist', JSON.stringify(waitlist));
+  }
+  document.getElementById(inputId).value = '';
+  const success = document.getElementById(successId);
+  success.style.display = 'block';
+  setTimeout(() => success.style.display = 'none', 4000);
+}
+
+// Smooth scroll
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    document.querySelector(a.getAttribute('href'))?.scrollIntoView({behavior:'smooth'});
+  });
+});
+</script>
+</body>
+</html>
