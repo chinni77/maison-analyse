@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Maison Analyse">
+<title>MaisonPetiteLumiere · Etsy Analyse v6</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+:root{
+  --orange:#F1641E;--orange-light:#FDE8DC;
+  --bg:#FAF8F5;--card:#FFFFFF;--text:#1A1714;--muted:#8A8178;
+  --border:rgba(26,23,20,0.1);
+  --success:#3B6D11;--success-bg:#EAF3DE;
+  --warn:#854F0B;--warn-bg:#FAEEDA;
+  --danger:#A32D2D;--danger-bg:#FCEBEB;
+  --info:#185FA5;--info-bg:#E6F1FB;
+  --purple:#534AB7;--purple-bg:#EEEDFE;
+  --teal:#0F6E56;--teal-bg:#E1F5EE;
+  --radius:14px;--radius-sm:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:64px}
+
+/* HEADER */
+.app-header{background:var(--card);border-bottom:1px solid var(--border);padding:13px 14px}
+.header-row{display:flex;align-items:center;gap:11px}
+.header-logo{width:37px;height:37px;background:var(--orange);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.header-logo svg{width:20px;height:20px;fill:none;stroke:white;stroke-width:2}
+.header-title{font-family:'Playfair Display',serif;font-size:17px;font-weight:500}
+.header-sub{font-size:11px;color:var(--muted);margin-top:1px}
+.header-reload{margin-left:auto;padding:7px 12px;background:var(--orange);color:white;border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;display:flex;align-items:center;gap:5px}
+
+/* NAV */
+.nav{display:flex;background:var(--card);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;overflow-x:auto}
+.nav::-webkit-scrollbar{display:none}
+.nav-tab{flex:1;min-width:52px;padding:10px 3px 8px;text-align:center;font-size:9px;font-weight:500;color:var(--muted);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+.nav-tab.active{color:var(--orange);border-bottom-color:var(--orange)}
+.nav-tab i{display:block;font-size:15px;margin-bottom:2px}
+
+/* IMPORT SCREEN */
+.import-screen{padding:2rem 1.5rem;text-align:center}
+.import-icon{width:80px;height:80px;background:var(--orange-light);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-size:36px}
+.import-title{font-family:'Playfair Display',serif;font-size:22px;margin-bottom:8px}
+.import-sub{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:1.5rem}
+.import-steps{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:1.25rem;text-align:left}
+.import-step{display:flex;gap:10px;padding:6px 0;font-size:13px;color:var(--text)}
+.import-step-num{width:22px;height:22px;border-radius:50%;background:var(--orange);color:white;font-size:11px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.upload-btn{width:100%;padding:14px;background:var(--orange);color:white;border:none;border-radius:var(--radius-sm);font-size:15px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.upload-btn:active{opacity:.85}
+#csvInput{display:none}
+
+/* PAGE */
+.page{display:none}.page.active{display:block}
+.section{padding:14px 13px 0}
+.section-title{font-family:'Playfair Display',serif;font-size:15px;font-weight:400;margin-bottom:10px}
+
+/* METRICS */
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:11px}
+.metric{background:var(--card);border-radius:var(--radius);padding:12px 13px;border:1px solid var(--border)}
+.metric-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.metric-value{font-family:'Playfair Display',serif;font-size:22px;font-weight:400;line-height:1}
+.metric-sub{font-size:11px;margin-top:3px;color:var(--muted)}
+.metric-sub.good{color:var(--success)}
+.metric-sub.warn{color:var(--warn)}
+.metric-sub.bad{color:var(--danger)}
+
+/* CARD */
+.card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;margin-bottom:11px}
+.card-header{padding:12px 13px 0;font-size:13px;font-weight:500}
+.card-body{padding:10px 13px 13px}
+
+/* BAR */
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.bar-row:last-child{margin-bottom:0}
+.bar-label{font-size:11px;color:var(--muted);width:100px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{flex:1;height:5px;background:var(--bg);border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;background:var(--orange)}
+.bar-val{font-size:11px;color:var(--muted);width:32px;text-align:right;flex-shrink:0}
+
+/* LISTING ROWS */
+.listing-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);cursor:pointer}
+.listing-row:last-child{border-bottom:none}
+.listing-row:active{opacity:.7}
+.listing-thumb{width:44px;height:44px;border-radius:8px;object-fit:cover;flex-shrink:0;background:var(--bg)}
+.listing-info{flex:1;min-width:0}
+.listing-title-text{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
+.listing-meta{font-size:10px;color:var(--muted);display:flex;gap:8px}
+.score-badge{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;font-weight:500;font-size:12px;flex-shrink:0}
+.score-badge.high{background:var(--success-bg);color:var(--success)}
+.score-badge.mid{background:var(--warn-bg);color:var(--warn)}
+.score-badge.low{background:var(--danger-bg);color:var(--danger)}
+
+/* DETAIL MODAL */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:none;align-items:flex-end}
+.modal-backdrop.open{display:flex}
+.modal{background:var(--card);border-radius:20px 20px 0 0;width:100%;max-height:88vh;overflow-y:auto}
+.modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:12px auto 16px}
+.modal-img{width:100%;height:200px;object-fit:cover}
+.modal-body{padding:0 14px 24px}
+.modal-title{font-family:'Playfair Display',serif;font-size:18px;margin-bottom:12px;padding-top:14px}
+.modal-section{margin-bottom:14px}
+.modal-section-label{font-size:10px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.tag-grid{display:flex;flex-wrap:wrap;gap:5px}
+.tag-pill{padding:4px 10px;border-radius:20px;font-size:11px}
+.tag-ok{background:var(--success-bg);color:var(--success)}
+.tag-miss{background:var(--danger-bg);color:var(--danger)}
+.tag-neutral{background:var(--bg);color:var(--muted);border:1px solid var(--border)}
+.issue-row{display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;align-items:flex-start}
+.issue-row:last-child{border-bottom:none}
+.issue-icon{flex-shrink:0;margin-top:1px}
+.ai-prompt-btn{width:100%;padding:12px;background:var(--purple);color:white;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:4px}
+
+/* PRICE ANALYSIS */
+.price-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.price-item:last-child{border-bottom:none}
+.price-thumb{width:36px;height:36px;border-radius:6px;object-fit:cover;background:var(--bg);flex-shrink:0}
+.price-info{flex:1;min-width:0}
+.price-name{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.price-val{font-size:14px;font-weight:500;color:var(--text);flex-shrink:0}
+.price-badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:20px;font-weight:500;margin-left:6px}
+.price-high{background:var(--warn-bg);color:var(--warn)}
+.price-low{background:var(--info-bg);color:var(--info)}
+.price-ok{background:var(--success-bg);color:var(--success)}
+
+/* TAGS PAGE */
+.tag-cloud{display:flex;flex-wrap:wrap;gap:6px}
+.tag-cloud-pill{padding:5px 11px;border-radius:20px;font-size:12px;cursor:pointer}
+.missing-row{padding:9px 0;border-bottom:1px solid var(--border)}
+.missing-row:last-child{border-bottom:none}
+.missing-title{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:5px}
+.missing-pills{display:flex;flex-wrap:wrap;gap:4px}
+.missing-pill{font-size:11px;padding:3px 9px;border-radius:20px;background:var(--info-bg);color:var(--info);border:1px dashed rgba(24,95,165,.3)}
+
+/* SEASONAL */
+.season-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.season-tab{padding:6px 11px;border-radius:20px;font-size:12px;border:1px solid var(--border);background:var(--card);color:var(--muted);cursor:pointer}
+.season-tab.active{background:var(--orange);color:#fff;border-color:var(--orange)}
+.season-urgency{font-size:11px;padding:8px 11px;border-radius:var(--radius-sm);margin-bottom:10px}
+.season-urgency.hot{background:var(--danger-bg);color:var(--danger)}
+.season-urgency.warm{background:var(--warn-bg);color:var(--warn)}
+.season-urgency.cool{background:var(--info-bg);color:var(--info)}
+.season-tag-grid{display:flex;flex-wrap:wrap;gap:6px}
+.season-tag{padding:5px 11px;border-radius:20px;font-size:11px;cursor:pointer}
+
+/* AI TAB */
+.ai-banner{background:var(--purple-bg);border:1px solid rgba(83,74,183,.2);border-radius:var(--radius);padding:13px 14px;margin-bottom:12px;display:flex;gap:10px}
+.listing-picker{width:100%;padding:10px 32px 10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;background:var(--card);color:var(--text);margin-bottom:10px;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238A8178' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+.ai-btn{width:100%;padding:13px;background:var(--purple);color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:4px}
+.ai-result{display:none}.ai-result.visible{display:block}
+.ai-divider{height:1px;background:var(--border);margin:14px 0}
+.ai-label{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:500;margin-bottom:6px;margin-top:13px}
+.ai-title-box{background:var(--purple-bg);border:1px solid rgba(83,74,183,.15);border-radius:var(--radius-sm);padding:12px 40px 12px 13px;font-size:13px;color:var(--purple);line-height:1.6;margin-bottom:4px;position:relative;word-break:break-word}
+.copy-btn{position:absolute;top:9px;right:9px;background:none;border:none;font-size:16px;cursor:pointer;opacity:.5}
+.char-hint{font-size:10px;color:var(--muted);margin-bottom:10px}
+.ai-tags-grid{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:4px}
+.ai-tag{padding:6px 10px;border-radius:20px;font-size:11px;background:var(--purple-bg);color:var(--purple);border:1px solid rgba(83,74,183,.2);cursor:pointer;display:flex;align-items:center;gap:4px}
+.ai-tip{font-size:12px;line-height:1.6;padding:10px 12px;background:var(--bg);border-radius:var(--radius-sm);border-left:3px solid var(--purple)}
+.copy-result-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.copy-result-btn{padding:11px;border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;color:white}
+.ai-copy-box{display:none;margin-top:12px;background:var(--teal-bg);border:1px solid rgba(15,110,86,.2);border-radius:var(--radius-sm);padding:13px}
+.paste-area{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;background:var(--card);color:var(--text);resize:none;margin-bottom:8px;outline:none}
+.paste-area:focus{border-color:rgba(83,74,183,.4)}
+
+/* CHART */
+.chart-wrap{position:relative;width:100%;height:175px}
+
+/* SPINNER */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner-p{width:16px;height:16px;border:2px solid rgba(83,74,183,.2);border-top-color:var(--purple);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeUp .3s ease forwards}
+
+.toast{position:fixed;bottom:72px;left:50%;transform:translateX(-50%);background:#1A1714;color:#fff;padding:8px 18px;border-radius:20px;font-size:12px;z-index:9999;pointer-events:none;opacity:0;transition:opacity .2s;white-space:nowrap}
+.toast.show{opacity:1}
+.footer{text-align:center;font-size:11px;color:var(--muted);padding:20px 13px 0}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<!-- MODAL -->
+<div class="modal-backdrop" id="modalBackdrop" onclick="closeModalIfBg(event)">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<header class="app-header">
+  <div class="header-row">
+    <div class="header-logo">
+      <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12l2 2 4-4"/></svg>
+    </div>
+    <div style="flex:1">
+      <div class="header-title">MaisonPetiteLumiere</div>
+      <div class="header-sub" id="headerSub">Etsy Analyse · USA 🇺🇸</div>
+    </div>
+    <button class="header-reload" onclick="document.getElementById('csvInput').click()">
+      ↺ CSV laden
+    </button>
+    <input type="file" id="csvInput" accept=".csv" onchange="loadCSV(this)">
+  </div>
+</header>
+
+<nav class="nav">
+  <button class="nav-tab active" onclick="showPage('overview',this)"><i>📊</i>Übersicht</button>
+  <button class="nav-tab" onclick="showPage('seo',this)"><i>🔍</i>SEO</button>
+  <button class="nav-tab" onclick="showPage('price',this)"><i>💰</i>Preis</button>
+  <button class="nav-tab" onclick="showPage('tags',this)"><i>🏷️</i>Tags</button>
+  <button class="nav-tab" onclick="showPage('desc',this)"><i>📝</i>Beschr.</button>
+  <button class="nav-tab" onclick="showPage('seasonal',this)"><i>🎄</i>Saison</button>
+  <button class="nav-tab" onclick="showPage('ai',this)"><i>✨</i>KI</button>
+</nav>
+
+<!-- IMPORT SCREEN -->
+<div id="importScreen">
+  <div class="import-screen">
+    <div class="import-icon">📊</div>
+    <div class="import-title">CSV importieren</div>
+    <div class="import-sub">Lade deine Etsy Listings CSV-Datei und erhalte sofort eine vollständige Analyse aller Listings.</div>
+    <div class="import-steps">
+      <div class="import-step"><div class="import-step-num">1</div><div>Etsy Shop Manager → Listings → oben rechts "···" → <strong>Listings exportieren (CSV)</strong></div></div>
+      <div class="import-step"><div class="import-step-num">2</div><div>CSV-Datei herunterladen</div></div>
+      <div class="import-step"><div class="import-step-num">3</div><div>Unten auf <strong>"CSV laden"</strong> tippen und Datei auswählen</div></div>
+    </div>
+    <button class="upload-btn" onclick="document.getElementById('csvInput').click()">
+      📂 CSV Datei laden
+    </button>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="mainApp" style="display:none">
+
+<!-- OVERVIEW -->
+<div class="page active" id="page-overview">
+  <div class="section">
+    <div class="section-title">Übersicht</div>
+    <div class="metrics" id="overviewMetrics"></div>
+    <div class="section-title">SEO Score Verteilung</div>
+    <div class="card"><div class="card-body"><div class="chart-wrap"><canvas id="seoChart" role="img" aria-label="SEO Score Verteilung">SEO Score Verteilung.</canvas></div></div></div>
+    <div class="section-title">Top Listings nach SEO Score</div>
+    <div class="card"><div class="card-body" id="topListings"></div></div>
+    <div class="section-title">Schlechteste Listings</div>
+    <div class="card"><div class="card-body" id="worstListings"></div></div>
+  </div>
+</div>
+
+<!-- SEO -->
+<div class="page" id="page-seo">
+  <div class="section">
+    <div class="section-title">SEO Score · alle Listings</div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <button onclick="filterSeo('all',this)" class="season-tab active" style="font-size:11px">Alle</button>
+      <button onclick="filterSeo('low',this)" class="season-tab" style="font-size:11px">⚠️ Schlecht</button>
+      <button onclick="filterSeo('mid',this)" class="season-tab" style="font-size:11px">⚡ Mittel</button>
+      <button onclick="filterSeo('high',this)" class="season-tab" style="font-size:11px">✅ Gut</button>
+    </div>
+    <div class="card"><div class="card-body" id="seoList"></div></div>
+    <div class="card"><div class="card-header">Score-Erklärung</div><div class="card-body" style="font-size:12px;color:var(--muted);line-height:1.7"><span style="color:var(--success)">■</span> 80–100 gut &nbsp;·&nbsp;<span style="color:var(--warn)">■</span> 50–79 verbesserbar &nbsp;·&nbsp;<span style="color:var(--danger)">■</span> 0–49 optimieren<br><br>Bewertet: Titel-Länge (140 Zeichen), Tags (13/13), Keyword-Match Titel↔Tags, Foto-Anzahl, Beschreibungs-Länge.</div></div>
+  </div>
+</div>
+
+<!-- PRICE -->
+<div class="page" id="page-price">
+  <div class="section">
+    <div class="section-title">Preis-Analyse</div>
+    <div class="metrics" id="priceMetrics"></div>
+    <div class="section-title">Preisverteilung</div>
+    <div class="card"><div class="card-body"><div class="chart-wrap"><canvas id="priceChart" role="img" aria-label="Preisverteilung">Preisverteilung.</canvas></div></div></div>
+    <div class="section-title">Zu günstig? (unter Ø)</div>
+    <div class="card"><div class="card-body" id="cheapListings"></div></div>
+    <div class="section-title">Teuerste Listings</div>
+    <div class="card"><div class="card-body" id="expensiveListings"></div></div>
+  </div>
+</div>
+
+<!-- TAGS -->
+<div class="page" id="page-tags">
+  <div class="section">
+    <div class="section-title">Tag-Analyse</div>
+    <div class="metrics" id="tagMetrics"></div>
+    <div class="section-title">Tag-Wolke (häufigste Tags)</div>
+    <div class="card"><div class="card-body" id="tagCloud"></div></div>
+    <div class="section-title">⚠️ Listings mit fehlenden Tags</div>
+    <div class="card"><div class="card-body" id="missingTags"></div></div>
+    <div class="section-title">Keyword-Abgleich Titel ↔ Tags</div>
+    <div class="card"><div class="card-body" id="kwMatch"></div></div>
+  </div>
+</div>
+
+<!-- DESCRIPTION -->
+<div class="page" id="page-desc">
+  <div class="section">
+    <div class="section-title">Beschreibungs-Analyse</div>
+    <div class="metrics" id="descMetrics"></div>
+    <div class="section-title">Beschreibungs-Länge pro Listing</div>
+    <div class="card"><div class="card-body" id="descBars"></div></div>
+    <div class="section-title">⚠️ Zu kurze Beschreibungen</div>
+    <div class="card"><div class="card-body" id="shortDescs"></div></div>
+  </div>
+</div>
+
+<!-- SEASONAL -->
+<div class="page" id="page-seasonal">
+  <div class="section">
+    <div class="section-title">Saisonale Empfehlungen 🇺🇸</div>
+    <div class="season-tabs" id="seasonTabs"></div>
+    <div id="seasonUrgency" class="season-urgency warm"></div>
+    <div class="card"><div class="card-header" id="seasonCardTitle"></div><div class="card-body"><p style="font-size:11px;color:var(--muted);margin-bottom:10px">Tippe zum Kopieren</p><div class="season-tag-grid" id="seasonTagsEl"></div></div></div>
+    <div class="card"><div class="card-header">💡 Strategie-Tipp</div><div class="card-body" id="seasonTip" style="font-size:12px;line-height:1.7"></div></div>
+    <div class="card"><div class="card-header">📅 Alle Saisons</div><div class="card-body" id="seasonCalendar" style="font-size:12px;line-height:2.2"></div></div>
+  </div>
+</div>
+
+<!-- AI -->
+<div class="page" id="page-ai">
+  <div class="section">
+    <div class="ai-banner">
+      <div style="font-size:20px;flex-shrink:0">✨</div>
+      <div style="font-size:12px;color:var(--purple);line-height:1.5"><strong style="display:block;font-weight:500;margin-bottom:2px;font-size:13px">KI-Optimierung · US-Markt</strong>Professionelle SEO-Methodik: Anchor-Keywords, 5 W's, Zero-Overlap, 140-Zeichen-Titel.</div>
+    </div>
+    <select class="listing-picker" id="listingPicker"><option value="">— Listing auswählen —</option></select>
+    <button class="ai-btn" id="aiBtn" onclick="runAiOptimize()"><span>✨</span> Jetzt optimieren</button>
+    <p style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:4px">Prompt wird kopiert → in Claude.ai einfügen</p>
+    <div class="ai-result" id="aiResult">
+      <div class="ai-divider"></div>
+      <div class="ai-copy-box" id="aiCopyBox" style="display:block">
+        <div style="font-size:13px;font-weight:500;color:var(--teal);margin-bottom:6px">✓ Prompt kopiert!</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:10px">Öffne Claude.ai, füge den Text ein und kopiere das Ergebnis zurück.</div>
+        <a href="https://claude.ai" target="_blank" style="display:block;padding:11px;background:var(--teal);color:#fff;border-radius:var(--radius-sm);text-align:center;font-size:13px;font-weight:500;text-decoration:none;margin-bottom:10px">Claude.ai öffnen →</a>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:5px">Optimierten Titel hier einfügen:</div>
+        <textarea class="paste-area" id="pasteTitle" rows="2" placeholder="Optimierten Titel von Claude hier einfügen..." oninput="updatePastedTitle()"></textarea>
+        <div style="font-size:11px;color:var(--muted);margin:5px 0">Optimierte Tags hier einfügen (kommagetrennt):</div>
+        <textarea class="paste-area" id="pasteTags" rows="2" placeholder="tag1, tag2, tag3... von Claude hier einfügen..." oninput="updatePastedTags()"></textarea>
+        <div class="copy-result-btns">
+          <button class="copy-result-btn" style="background:var(--purple)" onclick="doCopy(document.getElementById('pasteTitle').value.trim())">📋 Titel kopieren</button>
+          <button class="copy-result-btn" style="background:var(--teal)" onclick="copyPastedTags()">🏷️ Tags kopieren</button>
+        </div>
+      </div>
+      <div class="ai-label">✅ Vorschau Titel</div>
+      <div class="ai-title-box"><span id="aiTitleText" style="color:var(--muted);font-size:12px">Füge oben den optimierten Titel ein...</span></div>
+      <div class="char-hint" id="aiTitleChars"></div>
+      <div class="ai-label">🏷️ Vorschau Tags</div>
+      <div class="ai-tags-grid" id="aiTagsGrid"></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end mainApp -->
+
+<div class="footer" id="footerEl">MaisonPetiteLumiere · v6 · CSV Import 📊</div>
+
+<script>
+let listings=[];
+let seoFilter='all';
+let priceChartObj=null, seoChartObj=null;
+let lastAiTags=[];
+
+// ══ CSV LOAD ══
+function loadCSV(input){
+  const file=input.files[0];
+  if(!file)return;
+  Papa.parse(file,{
+    header:true,
+    skipEmptyLines:true,
+    complete:function(results){
+      listings=results.data.map(r=>({
+        title:(r.TITLE||'').trim(),
+        description:(r.DESCRIPTION||'').trim(),
+        price:parseFloat(r.PRICE)||0,
+        currency:r.CURRENCY_CODE||'USD',
+        quantity:parseInt(r.QUANTITY)||0,
+        tags:(r.TAGS||'').split(',').map(t=>t.trim().toLowerCase()).filter(t=>t),
+        materials:(r.MATERIALS||'').trim(),
+        image:r.IMAGE1||'',
+        image2:r.IMAGE2||'',
+        images:[r.IMAGE1,r.IMAGE2,r.IMAGE3,r.IMAGE4,r.IMAGE5,r.IMAGE6,r.IMAGE7,r.IMAGE8,r.IMAGE9,r.IMAGE10].filter(x=>x&&x.trim()),
+      }));
+      document.getElementById('importScreen').style.display='none';
+      document.getElementById('mainApp').style.display='block';
+      document.getElementById('headerSub').textContent=`${listings.length} Listings geladen · USA 🇺🇸`;
+      document.getElementById('footerEl').textContent=`${listings.length} Listings · v6 · CSV Import 📊`;
+      renderAll();
+      showToast(`✅ ${listings.length} Listings geladen!`);
+    },
+    error:function(){showToast('Fehler beim Laden der CSV!');}
+  });
+}
+
+// ══ NAV ══
+function showPage(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(btn)btn.classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ══ SEO SCORE ══
+function seoScore(l){
+  let s=0;
+  const len=(l.title||'').length, tgs=l.tags||[];
+  const descLen=(l.description||'').length;
+  const photoCount=l.images?.length||0;
+  if(len>=120)s+=25;else if(len>=80)s+=15;else if(len>=40)s+=7;
+  if(tgs.length===13)s+=25;else if(tgs.length>=10)s+=15;else if(tgs.length>=7)s+=8;else if(tgs.length>=4)s+=4;
+  const tw=(l.title||'').toLowerCase().split(/\s+/).filter(w=>w.length>3);
+  const mc=tgs.filter(t=>tw.some(w=>t.toLowerCase().includes(w))).length;
+  s+=Math.min(mc*3,20);
+  if(photoCount>=7)s+=15;else if(photoCount>=5)s+=10;else if(photoCount>=3)s+=6;else if(photoCount>=1)s+=3;
+  if(descLen>=500)s+=15;else if(descLen>=200)s+=10;else if(descLen>=100)s+=5;
+  return Math.min(s,100);
+}
+const scoreClass=s=>s>=80?'high':s>=50?'mid':'low';
+
+// ══ RENDER ALL ══
+function renderAll(){
+  renderOverview();
+  renderSeo();
+  renderPrice();
+  renderTags();
+  renderDesc();
+  renderAiPicker();
+}
+
+// ══ OVERVIEW ══
+function renderOverview(){
+  const scores=listings.map(l=>seoScore(l));
+  const avg=Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
+  const good=scores.filter(s=>s>=80).length;
+  const bad=scores.filter(s=>s<50).length;
+  const avgPrice=listings.length?listings.reduce((s,l)=>s+l.price,0)/listings.length:0;
+  const avgTags=listings.length?Math.round(listings.reduce((s,l)=>s+l.tags.length,0)/listings.length):0;
+  const avgPhotos=listings.length?Math.round(listings.reduce((s,l)=>s+(l.images?.length||0),0)/listings.length):0;
+  document.getElementById('overviewMetrics').innerHTML=`
+    <div class="metric"><div class="metric-label">Listings gesamt</div><div class="metric-value">${listings.length}</div><div class="metric-sub">${good} gut optimiert</div></div>
+    <div class="metric"><div class="metric-label">Ø SEO Score</div><div class="metric-value">${avg}</div><div class="metric-sub ${avg>=80?'good':avg>=50?'warn':'bad'}">${avg>=80?'✓ Gut':avg>=50?'Verbesserbar':'Optimieren!'}</div></div>
+    <div class="metric"><div class="metric-label">Ø Preis</div><div class="metric-value">$${avgPrice.toFixed(0)}</div><div class="metric-sub">${listings.length} Listings</div></div>
+    <div class="metric"><div class="metric-label">⚠️ Schlecht</div><div class="metric-value">${bad}</div><div class="metric-sub bad">${bad} Listings unter 50</div></div>
+    <div class="metric"><div class="metric-label">Ø Tags</div><div class="metric-value">${avgTags}/13</div><div class="metric-sub ${avgTags>=12?'good':avgTags>=9?'warn':'bad'}">${avgTags>=12?'Sehr gut':avgTags>=9?'Okay':'Zu wenig'}</div></div>
+    <div class="metric"><div class="metric-label">Ø Fotos</div><div class="metric-value">${avgPhotos}</div><div class="metric-sub ${avgPhotos>=7?'good':avgPhotos>=4?'warn':'bad'}">${avgPhotos>=7?'Sehr gut':avgPhotos>=4?'Okay':'Zu wenig'}</div></div>`;
+
+  // SEO donut chart
+  if(seoChartObj)seoChartObj.destroy();
+  seoChartObj=new Chart(document.getElementById('seoChart'),{
+    type:'doughnut',
+    data:{labels:['Gut (80–100)','Mittel (50–79)','Schlecht (0–49)'],
+    datasets:[{data:[scores.filter(s=>s>=80).length,scores.filter(s=>s>=50&&s<80).length,scores.filter(s=>s<50).length],backgroundColor:['#EAF3DE','#FAEEDA','#FCEBEB'],borderColor:['#3B6D11','#854F0B','#A32D2D'],borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10,family:'DM Sans'},boxWidth:12,padding:10}}}}
+  });
+
+  // Top & worst
+  const sorted=[...listings].map(l=>({l,s:seoScore(l)})).sort((a,b)=>b.s-a.s);
+  document.getElementById('topListings').innerHTML=sorted.slice(0,5).map(({l,s})=>listingRow(l,s)).join('');
+  document.getElementById('worstListings').innerHTML=sorted.slice(-5).reverse().map(({l,s})=>listingRow(l,s)).join('');
+}
+
+function listingRow(l,s){
+  const sc=scoreClass(s);
+  const idx=listings.indexOf(l);
+  return `<div class="listing-row" onclick="openDetail(${idx})">
+    ${l.image?`<img class="listing-thumb" src="${l.image}" alt="${l.title}" loading="lazy">`:`<div class="listing-thumb" style="background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:18px">📦</div>`}
+    <div class="listing-info">
+      <div class="listing-title-text">${l.title||'Kein Titel'}</div>
+      <div class="listing-meta"><span>$${l.price.toFixed(2)}</span><span>🏷 ${l.tags.length}/13</span><span>📷 ${l.images?.length||0}</span></div>
+    </div>
+    <div class="score-badge ${sc}">${s}</div>
+  </div>`;
+}
+
+// ══ SEO ══
+function filterSeo(filter,btn){
+  seoFilter=filter;
+  document.querySelectorAll('.season-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  renderSeo();
+}
+function renderSeo(){
+  const sorted=[...listings].map(l=>({l,s:seoScore(l)})).sort((a,b)=>b.s-a.s);
+  let filtered=sorted;
+  if(seoFilter==='low')filtered=sorted.filter(x=>x.s<50);
+  else if(seoFilter==='mid')filtered=sorted.filter(x=>x.s>=50&&x.s<80);
+  else if(seoFilter==='high')filtered=sorted.filter(x=>x.s>=80);
+  document.getElementById('seoList').innerHTML=filtered.map(({l,s})=>{
+    const sc=scoreClass(s);const idx=listings.indexOf(l);
+    const tgs=l.tags||[];const len=(l.title||'').length;
+    const oks=[],issues=[];
+    if(len>=120)oks.push('Titel ✓');else if(len>=80)issues.push(`Titel kurz (${len}/140)`);else issues.push('Titel zu kurz!');
+    if(tgs.length===13)oks.push('13 Tags ✓');else issues.push(`${tgs.length}/13 Tags`);
+    const tw=(l.title||'').toLowerCase().split(/\s+/).filter(w=>w.length>3);
+    const mc=tgs.filter(t=>tw.some(w=>t.toLowerCase().includes(w))).length;
+    if(mc>=3)oks.push(`${mc} Keywords ✓`);else issues.push(`${mc} Keywords matchen`);
+    const pc=l.images?.length||0;
+    if(pc>=7)oks.push(`${pc} Fotos ✓`);else issues.push(`Nur ${pc} Fotos`);
+    return `<div class="listing-row" onclick="openDetail(${idx})">
+      ${l.image?`<img class="listing-thumb" src="${l.image}" alt="${l.title}" loading="lazy">`:`<div class="listing-thumb" style="background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:18px">📦</div>`}
+      <div class="listing-info">
+        <div class="listing-title-text">${(l.title||'').substring(0,45)}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:3px">
+          ${oks.map(o=>`<span style="font-size:9px;padding:1px 5px;border-radius:10px;background:var(--success-bg);color:var(--success)">${o}</span>`).join('')}
+          ${issues.map(i=>`<span style="font-size:9px;padding:1px 5px;border-radius:10px;background:var(--danger-bg);color:var(--danger)">${i}</span>`).join('')}
+        </div>
+      </div>
+      <div class="score-badge ${sc}">${s}</div>
+    </div>`;
+  }).join('')||'<p style="font-size:13px;color:var(--muted);text-align:center;padding:1rem">Keine Listings in dieser Kategorie</p>';
+}
+
+// ══ PRICE ══
+function renderPrice(){
+  const prices=listings.map(l=>l.price).filter(p=>p>0);
+  const avg=prices.reduce((a,b)=>a+b,0)/prices.length;
+  const min=Math.min(...prices);const max=Math.max(...prices);
+  const median=[...prices].sort((a,b)=>a-b)[Math.floor(prices.length/2)];
+  document.getElementById('priceMetrics').innerHTML=`
+    <div class="metric"><div class="metric-label">Ø Preis</div><div class="metric-value">$${avg.toFixed(0)}</div><div class="metric-sub">Durchschnitt</div></div>
+    <div class="metric"><div class="metric-label">Median</div><div class="metric-value">$${median.toFixed(0)}</div><div class="metric-sub">Mittlerer Preis</div></div>
+    <div class="metric"><div class="metric-label">Günstigstes</div><div class="metric-value">$${min.toFixed(0)}</div><div class="metric-sub good">Min</div></div>
+    <div class="metric"><div class="metric-label">Teuerstes</div><div class="metric-value">$${max.toFixed(0)}</div><div class="metric-sub">Max</div></div>`;
+
+  // Price distribution chart
+  const bk=[0,0,0,0,0];
+  prices.forEach(p=>{if(p<20)bk[0]++;else if(p<40)bk[1]++;else if(p<70)bk[2]++;else if(p<100)bk[3]++;else bk[4]++;});
+  if(priceChartObj)priceChartObj.destroy();
+  priceChartObj=new Chart(document.getElementById('priceChart'),{
+    type:'bar',
+    data:{labels:['<$20','$20–40','$40–70','$70–100','>$100'],
+    datasets:[{data:bk,backgroundColor:['#FDE8DC','#FAC775','#F1641E','#C45A1A','#8B3D10'],borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:10},color:'#888'},grid:{display:false}},y:{ticks:{font:{size:10},color:'#888'},grid:{color:'rgba(0,0,0,0.04)'}}}}
+  });
+
+  // Cheap listings
+  const cheap=[...listings].filter(l=>l.price>0&&l.price<avg*0.6).sort((a,b)=>a.price-b.price);
+  document.getElementById('cheapListings').innerHTML=cheap.slice(0,8).map(l=>`
+    <div class="price-item">
+      ${l.image?`<img class="price-thumb" src="${l.image}" alt="${l.title}" loading="lazy">`:'<div class="price-thumb" style="background:var(--bg)"></div>'}
+      <div class="price-info"><div class="price-name">${(l.title||'').substring(0,35)}</div><div style="font-size:10px;color:var(--muted)">${l.tags.length} Tags · ${l.images?.length||0} Fotos</div></div>
+      <div><span class="price-val">$${l.price.toFixed(2)}</span><span class="price-badge price-low">Zu günstig?</span></div>
+    </div>`).join('')||'<p style="font-size:12px;color:var(--muted);text-align:center;padding:.5rem">Alle Preise im normalen Bereich ✓</p>';
+
+  // Expensive
+  const exp=[...listings].sort((a,b)=>b.price-a.price);
+  document.getElementById('expensiveListings').innerHTML=exp.slice(0,5).map(l=>`
+    <div class="price-item">
+      ${l.image?`<img class="price-thumb" src="${l.image}" alt="${l.title}" loading="lazy">`:'<div class="price-thumb" style="background:var(--bg)"></div>'}
+      <div class="price-info"><div class="price-name">${(l.title||'').substring(0,35)}</div></div>
+      <div><span class="price-val">$${l.price.toFixed(2)}</span></div>
+    </div>`).join('');
+}
+
+// ══ TAGS ══
+function renderTags(){
+  const tc={};
+  listings.forEach(l=>l.tags.forEach(t=>{tc[t]=(tc[t]||0)+1;}));
+  const sorted=Object.entries(tc).sort((a,b)=>b[1]-a[1]);
+  const mx=sorted[0]?.[1]||1;
+  const colors=[['#FDE8DC','#F1641E'],['#EAF3DE','#3B6D11'],['#E6F1FB','#185FA5'],['#FAEEDA','#854F0B'],['#EEEDFE','#534AB7'],['#E1F5EE','#0F6E56']];
+  const totalTags=listings.reduce((s,l)=>s+l.tags.length,0);
+  const avgTags=Math.round(totalTags/listings.length);
+  const full=listings.filter(l=>l.tags.length===13).length;
+  const empty=listings.filter(l=>l.tags.length<7).length;
+  document.getElementById('tagMetrics').innerHTML=`
+    <div class="metric"><div class="metric-label">Einzigartige Tags</div><div class="metric-value">${sorted.length}</div><div class="metric-sub">insgesamt</div></div>
+    <div class="metric"><div class="metric-label">Ø Tags/Listing</div><div class="metric-value">${avgTags}/13</div><div class="metric-sub ${avgTags>=12?'good':avgTags>=9?'warn':'bad'}">${avgTags>=12?'Sehr gut':avgTags>=9?'Okay':'Verbessern!'}</div></div>
+    <div class="metric"><div class="metric-label">13/13 Tags</div><div class="metric-value">${full}</div><div class="metric-sub good">${full} Listings vollständig</div></div>
+    <div class="metric"><div class="metric-label">⚠️ Wenig Tags</div><div class="metric-value">${empty}</div><div class="metric-sub bad">${empty} unter 7 Tags</div></div>`;
+  document.getElementById('tagCloud').innerHTML=`<div class="tag-cloud">${sorted.slice(0,40).map(([tag,count],i)=>{
+    const size=11+Math.round((count/mx)*5);const[bg,fg]=colors[i%colors.length];
+    return `<span class="tag-cloud-pill" style="background:${bg};color:${fg};font-size:${size}px" onclick="doCopy('${tag}')" title="${count}×">${tag} <span style="opacity:.4;font-size:10px">${count}</span></span>`;
+  }).join('')}</div>`;
+
+  // Missing tags
+  const needs=listings.filter(l=>l.tags.length<13).sort((a,b)=>a.tags.length-b.tags.length);
+  const usaTags=['handmade gift','gift for her','gift for mom','home decor','wall decor','unique gift','boho decor','minimalist decor','french decor','living room','bedroom decor','baby shower gift','birthday gift','nursery decor','personalized gift'];
+  document.getElementById('missingTags').innerHTML=needs.slice(0,6).map(l=>{
+    const miss=13-l.tags.length;
+    const tw=(l.title||'').toLowerCase().replace(/[^\w\s]/g,'').split(/\s+/).filter(w=>w.length>3&&!l.tags.includes(w));
+    const sugg=[...new Set([...tw,...usaTags])].filter(w=>!l.tags.includes(w)).slice(0,miss);
+    return `<div class="missing-row">
+      <div class="missing-title">📦 ${(l.title||'').substring(0,38)} <span style="color:var(--danger);font-size:10px">(${l.tags.length}/13)</span></div>
+      <div class="missing-pills">${sugg.map(s=>`<span class="missing-pill" onclick="doCopy('${s}')">+ ${s}</span>`).join('')}</div>
+    </div>`;
+  }).join('')||'<p style="font-size:12px;color:var(--success);padding:.5rem 0">✓ Alle Listings haben 13 Tags!</p>';
+
+  // KW match
+  document.getElementById('kwMatch').innerHTML=listings.slice(0,8).map(l=>{
+    const tw=(l.title||'').toLowerCase().split(/\s+/).filter(w=>w.length>3);
+    const matched=l.tags.filter(t=>tw.some(w=>t.toLowerCase().includes(w)));
+    const unmatched=l.tags.filter(t=>!tw.some(w=>t.toLowerCase().includes(w)));
+    return `<div style="padding:8px 0;border-bottom:1px solid var(--border)">
+      <div style="font-size:12px;font-weight:500;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${(l.title||'').substring(0,40)}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:3px">
+        ${matched.map(t=>`<span style="font-size:10px;padding:2px 6px;border-radius:20px;background:var(--success-bg);color:var(--success)">✓ ${t}</span>`).join('')}
+        ${unmatched.slice(0,3).map(t=>`<span style="font-size:10px;padding:2px 6px;border-radius:20px;background:var(--danger-bg);color:var(--danger)">${t}</span>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══ DESCRIPTION ══
+function renderDesc(){
+  const lens=listings.map(l=>(l.description||'').length);
+  const avg=Math.round(lens.reduce((a,b)=>a+b,0)/lens.length);
+  const good=lens.filter(l=>l>=500).length;
+  const bad=lens.filter(l=>l<200).length;
+  document.getElementById('descMetrics').innerHTML=`
+    <div class="metric"><div class="metric-label">Ø Länge</div><div class="metric-value">${avg}</div><div class="metric-sub">Zeichen</div></div>
+    <div class="metric"><div class="metric-label">✅ Gut (500+)</div><div class="metric-value">${good}</div><div class="metric-sub good">${good} Listings</div></div>
+    <div class="metric"><div class="metric-label">⚠️ Kurz (&lt;200)</div><div class="metric-value">${bad}</div><div class="metric-sub bad">${bad} Listings</div></div>
+    <div class="metric"><div class="metric-label">Empfehlung</div><div class="metric-value">500+</div><div class="metric-sub">Zeichen ideal</div></div>`;
+
+  const maxLen=Math.max(...lens);
+  document.getElementById('descBars').innerHTML=[...listings].map((l,i)=>({l,len:lens[i]})).sort((a,b)=>b.len-a.len).slice(0,12).map(({l,len})=>{
+    const pct=Math.round((len/maxLen)*100);
+    const cls=len>=500?'good':len>=200?'warn':'bad';
+    const color=cls==='good'?'var(--success)':cls==='warn'?'#EF9F27':'var(--danger)';
+    return `<div class="bar-row">
+      <span class="bar-label">${(l.title||'').substring(0,16)}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${color}"></div></div>
+      <span class="bar-val">${len}</span>
+    </div>`;
+  }).join('');
+
+  const short=listings.filter(l=>(l.description||'').length<200).sort((a,b)=>(a.description||'').length-(b.description||'').length);
+  document.getElementById('shortDescs').innerHTML=short.slice(0,6).map(l=>`
+    <div class="listing-row" onclick="openDetail(${listings.indexOf(l)})">
+      ${l.image?`<img class="listing-thumb" src="${l.image}" alt="${l.title}" loading="lazy">`:`<div class="listing-thumb" style="background:var(--bg);display:flex;align-items:center;justify-content:center">📦</div>`}
+      <div class="listing-info">
+        <div class="listing-title-text">${(l.title||'').substring(0,40)}</div>
+        <div class="listing-meta"><span style="color:var(--danger)">Nur ${(l.description||'').length} Zeichen — mindestens 500 empfohlen</span></div>
+      </div>
+    </div>`).join('')||'<p style="font-size:12px;color:var(--success);text-align:center;padding:.5rem">✓ Alle Beschreibungen ausreichend lang!</p>';
+}
+
+// ══ DETAIL MODAL ══
+function openDetail(idx){
+  const l=listings[idx];if(!l)return;
+  const s=seoScore(l);const sc=scoreClass(s);
+  const descLen=(l.description||'').length;
+  const photoCount=l.images?.length||0;
+  const tw=(l.title||'').toLowerCase().split(/\s+/).filter(w=>w.length>3);
+  const matched=l.tags.filter(t=>tw.some(w=>t.toLowerCase().includes(w)));
+  const unmatched=l.tags.filter(t=>!tw.some(w=>t.toLowerCase().includes(w)));
+  const issues=[];
+  const tips=[];
+  if((l.title||'').length<120)issues.push({icon:'✏️',text:`Titel zu kurz: ${(l.title||'').length}/140 Zeichen. Ziel: 120–140.`});
+  else tips.push('Titel-Länge gut ✓');
+  if(l.tags.length<13)issues.push({icon:'🏷️',text:`Nur ${l.tags.length}/13 Tags. Füge ${13-l.tags.length} weitere Tags hinzu.`});
+  else tips.push('Alle 13 Tags vorhanden ✓');
+  if(matched.length<3)issues.push({icon:'🔗',text:`Nur ${matched.length} Tags matchen den Titel-Keywords. Mehr Überschneidung erhöht Sichtbarkeit.`});
+  else tips.push(`${matched.length} Keywords matchen ✓`);
+  if(photoCount<7)issues.push({icon:'📷',text:`Nur ${photoCount}/10 Fotos. Etsy bevorzugt Listings mit 7+ Fotos.`});
+  else tips.push(`${photoCount} Fotos — sehr gut ✓`);
+  if(descLen<500)issues.push({icon:'📝',text:`Beschreibung zu kurz: ${descLen} Zeichen. Mindestens 500 empfohlen.`});
+  else tips.push('Beschreibung ausreichend ✓');
+
+  document.getElementById('modalContent').innerHTML=`
+    <div class="modal-handle"></div>
+    ${l.image?`<img class="modal-img" src="${l.image}" alt="${l.title}" loading="lazy">`:''}
+    <div class="modal-body">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div class="score-badge ${sc}" style="width:40px;height:40px;font-size:14px">${s}</div>
+        <div style="flex:1"><div style="font-size:11px;color:var(--muted)">SEO Score</div><div style="font-size:11px;color:${sc==='high'?'var(--success)':sc==='mid'?'var(--warn)':'var(--danger)'}">${sc==='high'?'Gut optimiert':sc==='mid'?'Verbesserbar':'Dringend optimieren'}</div></div>
+        <div style="font-size:15px;font-weight:500">$${l.price.toFixed(2)}</div>
+      </div>
+      <div class="modal-title">${l.title||'Kein Titel'}</div>
+      ${tips.length?`<div class="modal-section"><div class="modal-section-label">✅ Was gut ist</div><div>${tips.map(t=>`<div style="font-size:12px;color:var(--success);padding:3px 0">✓ ${t}</div>`).join('')}</div></div>`:''}
+      ${issues.length?`<div class="modal-section"><div class="modal-section-label">⚠️ Verbesserungen</div><div>${issues.map(i=>`<div class="issue-row"><span class="issue-icon">${i.icon}</span><span>${i.text}</span></div>`).join('')}</div></div>`:''}
+      <div class="modal-section">
+        <div class="modal-section-label">Tags (${l.tags.length}/13)</div>
+        <div class="tag-grid">
+          ${matched.map(t=>`<span class="tag-pill tag-ok">✓ ${t}</span>`).join('')}
+          ${unmatched.map(t=>`<span class="tag-pill tag-neutral">${t}</span>`).join('')}
+        </div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-label">Fotos: ${photoCount}/10</div>
+        <div style="display:flex;gap:5px;overflow-x:auto">
+          ${l.images.slice(0,5).map(img=>`<img src="${img}" style="width:60px;height:60px;border-radius:6px;object-fit:cover;flex-shrink:0" loading="lazy">`).join('')}
+        </div>
+      </div>
+      <button class="ai-prompt-btn" onclick="closeModal();document.querySelectorAll('.nav-tab')[6].click();document.getElementById('listingPicker').value='${idx}';runAiOptimize()">✨ KI-Optimierung für dieses Listing</button>
+    </div>`;
+  document.getElementById('modalBackdrop').classList.add('open');
+}
+function closeModal(){document.getElementById('modalBackdrop').classList.remove('open');}
+function closeModalIfBg(e){if(e.target===document.getElementById('modalBackdrop'))closeModal();}
+
+// ══ AI PICKER ══
+function renderAiPicker(){
+  const picker=document.getElementById('listingPicker');
+  picker.innerHTML='<option value="">— Listing auswählen —</option>';
+  listings.forEach((l,i)=>{const opt=document.createElement('option');opt.value=i;opt.textContent=(l.title||'Listing '+i).substring(0,60);picker.appendChild(opt);});
+}
+
+function runAiOptimize(){
+  const idx=document.getElementById('listingPicker').value;
+  if(idx===''){showToast('Bitte ein Listing auswählen!');return;}
+  const l=listings[parseInt(idx)];
+  const prompt=`Optimiere dieses Etsy Listing für den US-Markt nach dieser Methodik:
+
+METHODIK:
+1. GENAUIGKEIT: Jedes Keyword muss wahr für das Produkt sein.
+2. TITEL: Nah an 140 Zeichen. Struktur: [Descriptive Keywords] [Anchor], wiederholen. Anchors = was das Produkt IST + Funktion (Gift For Her, Home Decor etc.). Keine Wortwiederholung. Standard Title Case.
+3. TAGS: Genau 13 Tags, max 20 Zeichen, min 2 Wörter. Kein Overlap mit Titel-Wörtern (Plurale zählen). Anchor-Noun NICHT in Tags. Nach 5 W's: WHO, WHAT, WHERE, WHEN, WHY. US-Englisch.
+
+LISTING:
+Titel (${(l.title||'').length} Zeichen): "${l.title||''}"
+Tags (${l.tags.length}/13): ${l.tags.join(', ')||'keine'}
+Preis: $${l.price.toFixed(2)}
+Materialien: ${l.materials||'nicht angegeben'}
+Shop: MaisonPetiteLumiere (handmade/artisan, US-Markt)
+
+Bitte gib mir:
+1. Optimierten Titel (nah an 140 Zeichen, Title Case)
+2. 13 optimierte Tags (max 20 Zeichen, nach WHO/WHAT/WHERE/WHEN/WHY)
+3. Kurze Erklärung auf Deutsch was du geändert hast`;
+
+  doCopy(prompt);
+  document.getElementById('aiResult').className='ai-result visible';
+  document.getElementById('aiCopyBox').style.display='block';
+  showToast('Prompt kopiert! ✓');
+}
+
+function updatePastedTitle(){
+  const t=document.getElementById('pasteTitle').value.trim();
+  document.getElementById('aiTitleText').textContent=t||'Füge oben den optimierten Titel ein...';
+  document.getElementById('aiTitleText').style.color=t?'var(--purple)':'var(--muted)';
+  const len=t.length;
+  const ch=document.getElementById('aiTitleChars');
+  if(t){ch.textContent=`${len}/140 · ${len>=120&&len<=140?'✓ Perfekt':len<120?'Etwas kurz':'Zu lang!'}`;ch.className='char-hint'+(len>140?' over':'');}
+  else ch.textContent='';
+}
+function updatePastedTags(){
+  const raw=document.getElementById('pasteTags').value;
+  lastAiTags=raw.split(',').map(t=>t.trim().toLowerCase()).filter(t=>t);
+  document.getElementById('aiTagsGrid').innerHTML=lastAiTags.map(tag=>`<span class="ai-tag" onclick="doCopy('${tag.replace(/'/g,"\\'")}')">🏷 ${tag} <span style="font-size:9px;opacity:.5">${tag.length}/20</span></span>`).join('');
+}
+function copyPastedTags(){if(lastAiTags.length)doCopy(lastAiTags.join(', '));else showToast('Bitte zuerst Tags einfügen!');}
+
+// ══ SEASONAL ══
+const now=new Date(),curMonth=now.getMonth()+1;
+const SEASONS={
+  'Valentinstag':{emoji:'❤️',month:2,urgency:'hot',tags:['valentines gift','gift for wife','love gift','romantic decor','gift for girlfriend','couples gift','heart decor','anniversary gift','gift for husband','french love decor','bedroom gift','sweet home gift','love home decor'],tip:'Valentinstag ist im Februar der heißeste Suchmonat. Jetzt sofort Tags hinzufügen!',color:['#FCEBEB','#A32D2D']},
+  'Muttertag':{emoji:'💐',month:5,urgency:'warm',tags:['mothers day gift','gift for mom','mom birthday gift','from daughter gift','mothers day decor','floral gift mom','gift for grandma','new mom gift','mom home decor','gift for wife','mama gift','french mom gift','mom wall art'],tip:'Muttertag (2. Sonntag im Mai) ist der zweitgrößte Etsy-Tag. Vorbereitung 8 Wochen vorher!',color:['#FDE8DC','#F1641E']},
+  'Baby Shower':{emoji:'👶',month:4,urgency:'cool',tags:['baby shower gift','new mom gift','gender neutral baby','nursery decor gift','baby arrival gift','expecting mom gift','newborn gift set','baby keepsake','baby room decor','first baby gift','pregnancy gift','baby milestone','new parents gift'],tip:'Baby Shower Gifts performen das ganze Jahr. Besonders stark Januar–April und September–November.',color:['#E6F1FB','#185FA5']},
+  'Halloween':{emoji:'🎃',month:10,urgency:'cool',tags:['halloween decor','spooky home decor','halloween gift','witchy decor','gothic home gift','halloween wall art','dark home decor','fall halloween gift','haunted decor','october gift','magic decor','halloween home gift','witch decor'],tip:'Halloween-Tags ab August hinzufügen. Etsy braucht Zeit zum Indexieren.',color:['#FDE8DC','#F1641E']},
+  'Thanksgiving':{emoji:'🦃',month:11,urgency:'cool',tags:['thanksgiving decor','fall home decor','harvest gift','autumn decor gift','thanksgiving gift','rustic fall decor','grateful home gift','fall table decor','november decor','cozy fall gift','autumn wall art','fall entertaining','harvest decor'],tip:'Thanksgiving und Fall Decor performen September–November.',color:['#FAEEDA','#854F0B']},
+  'Christmas':{emoji:'🎄',month:12,urgency:'warm',tags:['christmas gift','holiday home decor','christmas decor','holiday gift','stocking stuffer','gift under 50','christmas home gift','french christmas','cozy holiday gift','holiday wall art','christmas table','gift for her xmas','winter home decor'],tip:'Weihnachten = umsatzstärkster Monat. Optimierung MUSS bis Oktober fertig sein!',color:['#EAF3DE','#3B6D11']},
+  'Neujahr':{emoji:'🥂',month:1,urgency:'cool',tags:['new year decor','fresh start gift','new home gift','housewarming gift','january home decor','new beginnings gift','resolution gift','clean home gift','minimalist new year','fresh home decor','new chapter gift','renewal gift','winter home gift'],tip:'Januar ideal für Housewarming und "New Home"-Keywords.',color:['#EEEDFE','#534AB7']},
+};
+function initSeasonal(){
+  const order=Object.keys(SEASONS).sort((a,b)=>{const ma=SEASONS[a].month,mb=SEASONS[b].month;return((ma-curMonth+12)%12)-((mb-curMonth+12)%12);});
+  document.getElementById('seasonTabs').innerHTML=order.map((s,i)=>`<button class="season-tab${i===0?' active':''}" onclick="showSeason('${s}',this)">${SEASONS[s].emoji} ${s}</button>`).join('');
+  showSeason(order[0],document.querySelector('.season-tab.active'));
+  const mn=['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+  document.getElementById('seasonCalendar').innerHTML=order.map(name=>{const s=SEASONS[name];const ma=(s.month-curMonth+12)%12;return `<div style="display:flex;align-items:center;gap:8px"><span style="font-size:14px">${s.emoji}</span><span style="flex:1">${name}</span><span style="color:var(--muted);font-size:11px">${mn[s.month-1]} · in ${ma} Mon.</span></div>`;}).join('');
+}
+function showSeason(name,btn){
+  document.querySelectorAll('.season-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  const s=SEASONS[name];const ma=(s.month-curMonth+12)%12;
+  const um={hot:'🔥 Jetzt sofort hinzufügen!',warm:'⚡ Bald optimieren — '+ma+' Monate',cool:'📅 Noch Zeit — '+ma+' Monate'};
+  const ue=document.getElementById('seasonUrgency');
+  ue.className='season-urgency '+s.urgency;ue.textContent=um[s.urgency];
+  document.getElementById('seasonCardTitle').textContent=s.emoji+' Tags für '+name;
+  document.getElementById('seasonTagsEl').innerHTML=s.tags.map(t=>`<span class="season-tag" style="background:${s.color[0]};color:${s.color[1]}" onclick="doCopy('${t}')">${t}</span>`).join('');
+  document.getElementById('seasonTip').textContent=s.tip;
+}
+initSeasonal();
+
+// ══ COPY ══
+function doCopy(text){
+  if(navigator.clipboard){navigator.clipboard.writeText(text).then(()=>showToast('Kopiert ✓')).catch(()=>fb(text));}else fb(text);
+}
+function fb(text){const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);showToast('Kopiert ✓');}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2000);}
+</script>
+</body>
+</html>
